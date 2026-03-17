@@ -1,0 +1,3 @@
+name = "template-bpe-backend"
+main = "src/backend/main.ts"
+compatibility_date = "2025-03-17"

@@ -1,0 +1,21 @@
+pre-commit:
+  commands:
+    biome:
+      glob: "*.{ts,js,json}"
+      run: bunx biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    typecheck:
+      glob: "*.{ts,tsx}"
+      run: bunx turbo typecheck
+
+    colocated-tests:
+      glob: "*.test.ts"
+      run: |
+        for f in {staged_files}; do
+          src="${f%.test.ts}.ts"
+          [ -f "$src" ] || (echo "Orphaned test (no matching source): $f" && exit 1)
+        done
+
+    secret-scan:
+      run: bunx gitleaks@latest protect --staged --no-banner
