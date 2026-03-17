@@ -1,58 +1,98 @@
 # template-BPE
 
-TypeScript project template enforcing Basic_knowledge.md principles through tooling.
+TypeScript monorepo template enforcing code quality through tooling, CI/CD, and AI guardrails.
 
 ## Stack
 
-- **Runtime:** [Bun](https://bun.sh)
+- **Monorepo:** [Turborepo](https://turbo.build/) + [Bun Workspaces](https://bun.sh/docs/install/workspaces)
+- **Runtime:** [Bun](https://bun.sh) (dev/build), [Cloudflare Workers](https://workers.cloudflare.com/) (backend production)
+- **Backend:** [Hono](https://hono.dev/) with end-to-end type safety via [Hono RPC](https://hono.dev/docs/guides/rpc)
+- **Frontend:** [Astro](https://astro.build/) with Cloudflare Pages adapter
 - **Language:** TypeScript (strict mode)
 - **Error Handling & DI:** [Effect-TS](https://effect.website/) with `@effect/Schema`
 - **Linter & Formatter:** [Biome](https://biomejs.dev/)
 - **Git Hooks:** [Lefthook](https://github.com/evilmartians/lefthook)
-- **Secret Scanning:** [Gitleaks](https://gitleaks.io/)
+- **Secret Scanning:** [Gitleaks](https://gitleaks.io/) (system binary via Homebrew)
 
 ## Architecture
 
-Functional Core / Imperative Shell with the Impureim Sandwich pattern:
+Turborepo monorepo with Functional Core / Imperative Shell (Impureim Sandwich):
 
 ```
-src/
-└── backend/
-    ├── core/     # PURE — no I/O, no side effects, no imports from infra/ or shell/
-    ├── infra/    # Effect services (one per external system) with Context.Tag
-    ├── shell/    # Effect.gen coordinators — impure(read) → pure(compute) → impure(write)
-    └── main.ts   # Composition root — provides live Layers, runs effects
+apps/
+├── backend/              # Hono on Cloudflare Workers (Effect-TS)
+│   ├── wrangler.toml
+│   └── src/backend/
+│       ├── core/         # PURE — no I/O, no side effects
+│       ├── infra/        # Effect services behind Context.Tag
+│       ├── shell/        # Hono routes + Effect.gen coordinators
+│       │   └── api.ts    # Route definitions, exports AppType for RPC
+│       └── main.ts       # Composition root — Workers fetch handler
+├── frontend/             # Astro on Cloudflare Pages
+│   ├── astro.config.ts
+│   ├── wrangler.toml
+│   └── src/
+│       ├── api.ts        # hc<AppType> typed client (zero codegen)
+│       ├── layouts/
+│       └── pages/
+packages/                 # Shared workspace packages
+```
+
+### Hono RPC (End-to-End Type Safety)
+
+The backend exports its route types, the frontend consumes them — no codegen, no schema files:
+
+```typescript
+// Backend: shell/api.ts
+const app = new Hono().get("/health", (c) => c.json({ status: "ok" }));
+export type AppType = typeof app;
+
+// Frontend: src/api.ts
+import type { AppType } from "@template-bpe/backend/types";
+const api = hc<AppType>("http://localhost:8787");
+const res = await api.health.$get(); // fully typed
 ```
 
 ## Quick Start
 
 ```sh
-bun install         # install deps + activate git hooks
-bun run dev         # watch mode
-bun test            # run tests
-bun run check       # full pipeline: typecheck → lint → test
+# 1. Create repo from template
+gh repo create my-app --template Pierre-Mike/template-BPE --private
+
+# 2. Install dependencies + activate git hooks
+bun install
+
+# 3. Apply branch protection rules (requires gh CLI)
+.github/setup.sh
+
+# 4. Start development
+bun run dev
 ```
+
+### Prerequisites
+
+- [Bun](https://bun.sh) (runtime & package manager)
+- [Gitleaks](https://gitleaks.io/) (`brew install gitleaks`)
+- [gh CLI](https://cli.github.com/) (for branch protection setup)
 
 ## Scripts
 
 | Script | Description |
 |--------|-------------|
-| `bun run dev` | Watch mode |
-| `bun run build` | Build to `dist/` |
-| `bun run start` | Run production |
-| `bun test` | Run tests |
-| `bun run test:coverage` | Tests with coverage |
-| `bun run typecheck` | `tsc --noEmit` |
-| `bun run lint` | Biome auto-fix |
-| `bun run lint:ci` | Biome CI (no fix) |
-| `bun run check` | Full pipeline |
+| `bun run dev` | Turbo dev — all apps in parallel |
+| `bun run build` | Turbo build — cached, dependency-aware |
+| `bun run test` | Turbo test — cached |
+| `bun run typecheck` | Turbo typecheck — cached |
+| `bun run lint` | Biome auto-fix (root-level) |
+| `bun run lint:ci` | Biome CI — no fix |
+| `bun run check` | Full pipeline: typecheck + test + lint |
 
 ## Pre-commit Hooks
 
-Runs automatically on every `git commit`:
+Runs automatically on every `git commit` via Lefthook:
 
 1. **Biome** — auto-fix + re-stage (`stage_fixed: true`)
-2. **TypeScript** — type check (`tsc --noEmit`)
+2. **Turbo typecheck** — cached type checking across all packages
 3. **Co-located tests** — ensures every `.test.ts` has a matching `.ts`
 4. **Gitleaks** — secret scanning on staged files
 
@@ -62,6 +102,60 @@ Runs automatically on every `git commit`:
 
 Each stage gates the next. No force merges.
 
+## Branch Protection
+
+Branch rules are defined in `.github/branch-rules.json` and enforced on `main`:
+
+- **No direct pushes** — all changes go through PRs
+- **1 approving review** + CODEOWNERS review required
+- **All 6 CI checks must pass** before merge
+- **Force pushes disabled**, admins not exempt
+
+### Setup (first time)
+
+Run once after creating a repo from this template:
+
+```sh
+.github/setup.sh
+```
+
+This reads `.github/branch-rules.json` and applies the rules via `gh api`.
+
+### Ongoing changes
+
+Add the `branch-protection.yml` workflow (see AGENTS.md) to auto-sync rules when `branch-rules.json` changes on `main`. This requires a `BRANCH_PROTECTION_TOKEN` secret with `repo` scope — the default `GITHUB_TOKEN` cannot modify branch protection.
+
+| Step | Tool | When |
+|------|------|------|
+| Initial setup | `setup.sh` | Once, after creating repo from template |
+| Ongoing changes | `branch-protection.yml` | Automatically on merge to `main` |
+
+Both read from `branch-rules.json` — single source of truth.
+
+## AI Guardrails
+
+### Protected Files
+
+The following files require **human review** and cannot be modified by AI agents:
+
+| File | Purpose |
+|------|---------|
+| `AGENTS.md` | AI behavior instructions |
+| `.claude/` | AI agent settings & permissions |
+| `biome.json` | Linting & formatting rules |
+| `lefthook.yml` | Git hook definitions |
+| `turbo.json` | Build pipeline & caching |
+| `tsconfig.json`, `tsconfig.base.json` | TypeScript compiler config |
+| `/package.json` | Root workspace config |
+| `.github/` | CI/CD workflows & CODEOWNERS |
+| `**/wrangler.toml` | Cloudflare deployment config |
+
+**Enforcement layers:**
+
+1. **`.claude/settings.json`** — deny rules block AI from editing protected files
+2. **`.github/CODEOWNERS`** — requires `@Pierre-Mike` approval on PRs touching protected files
+3. **Branch protection** — PRs required, CI must pass, no force pushes
+
 ## Conventions
 
 - **Co-located tests:** `foo.ts` → `foo.test.ts` in the same directory
@@ -69,3 +163,5 @@ Each stage gates the next. No force merges.
 - **No `any`:** `noExplicitAny: error`
 - **Immutability:** `useConst`, `readonly`, `as const`
 - **Effect-TS:** for all error handling, DI, concurrency — no try/catch, no mock frameworks
+- **No Bun APIs in backend:** deploy target is Cloudflare Workers (V8 isolates)
+- **Root-level Biome:** lint/format runs at monorepo root, not per-package
