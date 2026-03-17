@@ -1,0 +1,27 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"_comment": "Branch protection rules applied via setup.sh. Requires GitHub Pro (private) or public repo.",
+	"branch": "main",
+	"protection": {
+		"required_pull_request_reviews": {
+			"required_approving_review_count": 1,
+			"dismiss_stale_reviews": true,
+			"require_code_owner_reviews": true
+		},
+		"required_status_checks": {
+			"strict": true,
+			"contexts": [
+				"Type Check",
+				"Biome CI",
+				"Test",
+				"Enforce Co-located Tests",
+				"Secret Scan",
+				"Build"
+			]
+		},
+		"enforce_admins": true,
+		"restrictions": null,
+		"allow_force_pushes": false,
+		"allow_deletions": false
+	}
+}

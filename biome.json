@@ -52,6 +52,19 @@
 			"trailingCommas": "none"
 		}
 	},
+	"overrides": [
+		{
+			"includes": ["**/*.astro"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedVariables": "off",
+						"noUnusedImports": "off"
+					}
+				}
+			}
+		}
+	],
 	"files": {
 		"includes": [
 			"**",
@@ -60,7 +73,9 @@
 			"!**/out",
 			"!**/coverage",
 			"!**/*.tgz",
-			"!**/bun.lock"
+			"!**/bun.lock",
+			"!**/.astro",
+			"!**/.wrangler"
 		]
 	}
 }

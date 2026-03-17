@@ -1,0 +1,15 @@
+---
+import { api } from "../api";
+import Base from "../layouts/Base.astro";
+
+const res = await api.health.$get();
+const data = await res.json();
+---
+
+<Base title="template-bpe">
+	<main>
+		<h1>template-bpe</h1>
+		<p>Backend status: {data.status}</p>
+		<p>Timestamp: {data.timestamp}</p>
+	</main>
+</Base>

@@ -5,10 +5,6 @@
 import type { AppType } from "@template-bpe/backend/types";
 import { hc } from "hono/client";
 
-const API_BASE = "http://localhost:8787";
+const API_BASE = import.meta.env.PUBLIC_API_URL ?? "http://localhost:8787";
 
 export const api = hc<AppType>(API_BASE);
-
-// Usage example (fully typed):
-// const res = await api.health.$get();
-// const data = await res.json(); // { status: "ok", timestamp: number }

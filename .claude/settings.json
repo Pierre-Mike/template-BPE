@@ -1,0 +1,26 @@
+{
+	"permissions": {
+		"deny": [
+			"Edit(AGENTS.md)",
+			"Write(AGENTS.md)",
+			"Edit(biome.json)",
+			"Write(biome.json)",
+			"Edit(turbo.json)",
+			"Write(turbo.json)",
+			"Edit(lefthook.yml)",
+			"Write(lefthook.yml)",
+			"Edit(tsconfig.json)",
+			"Write(tsconfig.json)",
+			"Edit(tsconfig.base.json)",
+			"Write(tsconfig.base.json)",
+			"Edit(package.json)",
+			"Write(package.json)",
+			"Edit(.github/**)",
+			"Write(.github/**)",
+			"Edit(.claude/**)",
+			"Write(.claude/**)",
+			"Edit(**/wrangler.toml)",
+			"Write(**/wrangler.toml)"
+		]
+	}
+}
