@@ -30,6 +30,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # turbo
 .turbo
 
+# wrangler
+.wrangler
+
 # IntelliJ based IDEs
 .idea
 

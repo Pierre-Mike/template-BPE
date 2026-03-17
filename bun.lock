@@ -7,7 +7,6 @@
       "devDependencies": {
         "@biomejs/biome": "^2.4.7",
         "@types/bun": "latest",
-        "gitleaks": "^1.0.0",
         "lefthook": "^2.1.4",
         "turbo": "^2.7.0",
         "typescript": "^5",
@@ -218,8 +217,6 @@
     "fast-check": ["fast-check@3.23.2", "", { "dependencies": { "pure-rand": "^6.1.0" } }, "sha512-h5+1OzzfCC3Ef7VbtKdcv7zsstUQwUDlYpUTvjeUsJAssPgLn7QzbboPtL5ro04Mq0rPOsMzl7q5hIbRs2wD1A=="],
 
     "fsevents": ["fsevents@2.3.3", "", { "os": "darwin" }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
-
-    "gitleaks": ["gitleaks@1.0.0", "", {}, "sha512-mTtKkWCAeHnTiBmRzjKnot8D8zX/JVDuRffuvSCr+z93vuBXygeifGZ7lXOB8Hjxto+DikSoF0XXfxntd1BZSQ=="],
 
     "hono": ["hono@4.12.8", "", {}, "sha512-VJCEvtrezO1IAR+kqEYnxUOoStaQPGrCmX3j4wDTNOcD1uRPFpGlwQUIW8niPuvHXaTUxeOUl5MMDGrl+tmO9A=="],
 

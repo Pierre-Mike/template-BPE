@@ -19,7 +19,6 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.7",
 		"@types/bun": "latest",
-		"gitleaks": "^1.0.0",
 		"lefthook": "^2.1.4",
 		"turbo": "^2.7.0",
 		"typescript": "^5"
