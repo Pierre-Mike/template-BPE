@@ -54,7 +54,7 @@ jobs:
               echo "Orphaned test: $f"
               found=1
             fi
-          done < <(find src -name "*.test.ts")
+          done < <(find apps -name "*.test.ts")
           exit $found
 
   secret-scan:
