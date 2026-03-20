@@ -61,7 +61,7 @@ jobs:
             - Testing Strategy → Testing Decisions
             - Infer user stories from the RFC context
 
-            Create the PRD as a GitHub issue using the write-a-prd issue template.
+            Create the PRD as a GitHub issue.
             Then post a comment on the source RFC issue linking to the new PRD issue.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -99,7 +99,7 @@ jobs:
             This is a PRD. Break it into tracer-bullet vertical slices:
             1. Explore the codebase to understand the current architecture
             2. Break the PRD into thin end-to-end slices (NOT horizontal layers)
-            3. Create each slice as a GitHub issue using the prd-to-issues issue template
+            3. Create each slice as a GitHub issue
             4. Create issues in dependency order so blockers exist before dependent issues reference them
 
             Do not ask for approval — create the issues directly.
