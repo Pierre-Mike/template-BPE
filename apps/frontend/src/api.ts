@@ -5,8 +5,6 @@
 import type { ClientRequestOptions, ClientResponse } from "hono/client";
 import { hc } from "hono/client";
 
-const API_BASE = import.meta.env.PUBLIC_API_URL ?? "http://localhost:8787";
-
 /**
  * Minimal structural type mirroring the backend's Hono app routes.
  * Defined locally so the frontend does not depend on Effect-TS at type-check time.
@@ -29,4 +27,6 @@ interface BackendClient {
 // hc<AppType> resolves to `unknown` in the Astro LSP because @effect/schema is
 // not a frontend dependency. We cast through the structural interface above which
 // accurately mirrors the backend routes.
-export const api = hc(API_BASE) as unknown as BackendClient;
+export function createApiClient(baseUrl: string): BackendClient {
+	return hc(baseUrl) as unknown as BackendClient;
+}

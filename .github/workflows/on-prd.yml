@@ -1,0 +1,72 @@
+name: PRD → Slices
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  prd-to-slices:
+    name: PRD → Slices
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'prd')
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure labels exist
+        run: |
+          gh label create slice --color e4e669 --description "Vertical implementation slice" --force
+          gh label create slice-pending --color d4c5f9 --description "Slice waiting on blockers" --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Break PRD into vertical slices
+        uses: anthropics/claude-code-action@v1
+        with:
+          allowed_bots: '*'
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowedTools "Bash(gh:*),Bash(git:*),Read,Glob,Grep,WebSearch"'
+          show_full_output: true
+          prompt: |
+            Fetch GitHub issue #${{ github.event.issue.number }} with:
+            gh issue view ${{ github.event.issue.number }} --comments
+
+            This is a PRD. Break it into tracer-bullet vertical slices:
+            1. Explore the codebase to understand the current architecture
+            2. Break the PRD into thin end-to-end slices (NOT horizontal layers)
+            3. Determine dependencies between slices before creating any issue
+
+            For each slice, include these two fields at the top of the body (omit if empty):
+            **Blocked by:** #X, #Y
+            **Unblocks:** #X, #Y
+
+            Labeling rules:
+            - No blockers → label "slice" (triggers implementation immediately)
+            - Has blockers → label "slice-pending" (waits until all blockers close)
+
+            Create issues in dependency order (blockers first) and register each as a sub-issue of this PRD:
+            REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+            SLICE_URL=$(gh issue create --title "Slice: <title>" --body "<body>" --label <slice|slice-pending>)
+            SLICE_NUMBER=$(echo "$SLICE_URL" | grep -o '[0-9]*$')
+            gh api repos/$REPO/issues/${{ github.event.issue.number }}/sub_issues \
+              --method POST --field sub_issue_id=$SLICE_NUMBER
+
+            Do not ask for approval — create the issues directly.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report failure
+        if: failure()
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "❌ **Skill chain failed** (PRD → Slices)
+
+          Workflow logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

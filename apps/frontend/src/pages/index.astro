@@ -1,7 +1,10 @@
 ---
-import { api } from "../api";
+import { env } from "cloudflare:workers";
+import { createApiClient } from "../api";
 import Base from "../layouts/Base.astro";
 
+const apiBase = env.PUBLIC_API_URL ?? "http://localhost:8787";
+const api = createApiClient(apiBase);
 const res = await api.version.$get();
 const data = await res.json();
 ---
