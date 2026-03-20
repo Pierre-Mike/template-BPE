@@ -1,0 +1,66 @@
+name: Slice → Implementation
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  implement-slice:
+    name: Slice → Implementation
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'slice')
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Post progress comment
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "🤖 **Skill chain started** — implementing this slice using TDD.
+
+          Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Implement slice using TDD
+        uses: anthropics/claude-code-action@v1
+        with:
+          allowed_bots: '*'
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowedTools "Bash(gh:*),Bash(git:*),Bash(bun:*),Read,Write,Edit,Glob,Grep,WebSearch"'
+          show_full_output: true
+          prompt: |
+            Fetch GitHub issue #${{ github.event.issue.number }} with:
+            gh issue view ${{ github.event.issue.number }} --comments
+
+            Implement this slice using TDD:
+            1. Plan red-green-refactor cycles from the acceptance criteria
+            2. For each behavior: write a failing test (RED), write minimal code to pass (GREEN)
+            3. Refactor after all tests pass
+
+            Create a branch named slice/issue-${{ github.event.issue.number }}, commit, then open a PR:
+            gh pr create --title "Implement: ${{ github.event.issue.title }}" --body "Closes #${{ github.event.issue.number }}" --head slice/issue-${{ github.event.issue.number }} --base main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report failure
+        if: failure()
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "❌ **Skill chain failed** (Slice → Implementation)
+
+          Workflow logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

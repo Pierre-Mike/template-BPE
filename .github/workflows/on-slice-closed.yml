@@ -1,0 +1,62 @@
+name: Slice closed → Unblock dependents
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  issues: write
+
+jobs:
+  unblock:
+    name: Unblock dependent slices
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'slice')
+
+    steps:
+      - name: Unblock dependent slices
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLOSED_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          # Read the closed issue body and parse "**Unblocks:** #X, #Y"
+          BODY=$(gh issue view "$CLOSED_NUMBER" --json body -q .body)
+          UNBLOCKS_LINE=$(echo "$BODY" | grep -oP '(?<=\*\*Unblocks:\*\* ).*' || true)
+
+          if [ -z "$UNBLOCKS_LINE" ]; then
+            echo "No unblocks field — nothing to do."
+            exit 0
+          fi
+
+          # Extract issue numbers from the unblocks line
+          CANDIDATES=$(echo "$UNBLOCKS_LINE" | grep -oP '\d+')
+
+          for CANDIDATE in $CANDIDATES; do
+            echo "Checking slice-pending #$CANDIDATE..."
+
+            # Skip if it doesn't have the slice-pending label
+            LABELS=$(gh issue view "$CANDIDATE" --json labels -q '.labels[].name' 2>/dev/null || true)
+            if ! echo "$LABELS" | grep -q "slice-pending"; then
+              echo "#$CANDIDATE is not slice-pending — skipping."
+              continue
+            fi
+
+            # Parse "**Blocked by:** #X, #Y" from the candidate's body
+            CANDIDATE_BODY=$(gh issue view "$CANDIDATE" --json body -q .body)
+            BLOCKERS=$(echo "$CANDIDATE_BODY" | grep -oP '(?<=\*\*Blocked by:\*\* ).*' | grep -oP '\d+' || true)
+
+            ALL_CLOSED=true
+            for BLOCKER in $BLOCKERS; do
+              STATE=$(gh issue view "$BLOCKER" --json state -q .state 2>/dev/null || echo "OPEN")
+              if [ "$STATE" != "CLOSED" ]; then
+                echo "  Blocker #$BLOCKER is still open — #$CANDIDATE stays pending."
+                ALL_CLOSED=false
+                break
+              fi
+            done
+
+            if [ "$ALL_CLOSED" = "true" ]; then
+              echo "All blockers resolved — promoting #$CANDIDATE to slice."
+              gh issue edit "$CANDIDATE" --add-label slice --remove-label slice-pending
+            fi
+          done
