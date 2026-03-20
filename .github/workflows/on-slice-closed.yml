@@ -19,8 +19,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLOSED_NUMBER: ${{ github.event.issue.number }}
         run: |
+          REPO="${{ github.repository }}"
+
           # Read the closed issue body and parse "**Unblocks:** #X, #Y"
-          BODY=$(gh issue view "$CLOSED_NUMBER" --json body -q .body)
+          BODY=$(gh issue view "$CLOSED_NUMBER" --repo "$REPO" --json body -q .body)
           UNBLOCKS_LINE=$(echo "$BODY" | grep -oP '(?<=\*\*Unblocks:\*\* ).*' || true)
 
           if [ -z "$UNBLOCKS_LINE" ]; then
@@ -35,19 +37,19 @@ jobs:
             echo "Checking slice-pending #$CANDIDATE..."
 
             # Skip if it doesn't have the slice-pending label
-            LABELS=$(gh issue view "$CANDIDATE" --json labels -q '.labels[].name' 2>/dev/null || true)
+            LABELS=$(gh issue view "$CANDIDATE" --repo "$REPO" --json labels -q '.labels[].name' 2>/dev/null || true)
             if ! echo "$LABELS" | grep -q "slice-pending"; then
               echo "#$CANDIDATE is not slice-pending — skipping."
               continue
             fi
 
             # Parse "**Blocked by:** #X, #Y" from the candidate's body
-            CANDIDATE_BODY=$(gh issue view "$CANDIDATE" --json body -q .body)
+            CANDIDATE_BODY=$(gh issue view "$CANDIDATE" --repo "$REPO" --json body -q .body)
             BLOCKERS=$(echo "$CANDIDATE_BODY" | grep -oP '(?<=\*\*Blocked by:\*\* ).*' | grep -oP '\d+' || true)
 
             ALL_CLOSED=true
             for BLOCKER in $BLOCKERS; do
-              STATE=$(gh issue view "$BLOCKER" --json state -q .state 2>/dev/null || echo "OPEN")
+              STATE=$(gh issue view "$BLOCKER" --repo "$REPO" --json state -q .state 2>/dev/null || echo "OPEN")
               if [ "$STATE" != "CLOSED" ]; then
                 echo "  Blocker #$BLOCKER is still open — #$CANDIDATE stays pending."
                 ALL_CLOSED=false
@@ -57,6 +59,6 @@ jobs:
 
             if [ "$ALL_CLOSED" = "true" ]; then
               echo "All blockers resolved — promoting #$CANDIDATE to slice."
-              gh issue edit "$CANDIDATE" --add-label slice --remove-label slice-pending
+              gh issue edit "$CANDIDATE" --repo "$REPO" --add-label slice --remove-label slice-pending
             fi
           done
