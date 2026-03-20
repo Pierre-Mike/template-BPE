@@ -1,0 +1,171 @@
+name: Skill Chain
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  detect:
+    name: Detect issue type
+    runs-on: ubuntu-latest
+    if: github.event.sender.type != 'Bot'
+    outputs:
+      type: ${{ steps.detect.outputs.type }}
+
+    steps:
+      - name: Detect issue type from body
+        id: detect
+        env:
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          if echo "$BODY" | grep -q "## Proposed Interface"; then
+            echo "type=rfc" >> $GITHUB_OUTPUT
+          elif echo "$BODY" | grep -q "## User Stories"; then
+            echo "type=prd" >> $GITHUB_OUTPUT
+          elif echo "$BODY" | grep -q "## Parent PRD"; then
+            echo "type=slice" >> $GITHUB_OUTPUT
+          else
+            echo "type=unknown" >> $GITHUB_OUTPUT
+          fi
+
+  rfc-to-prd:
+    name: RFC → PRD
+    needs: detect
+    if: needs.detect.outputs.type == 'rfc'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate PRD from RFC
+        uses: anthropics/claude-code-action@v1
+        with:
+          allowed_bots: '*'
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowedTools "Bash(gh:*),Bash(git:*),Read,Glob,Grep,WebSearch"'
+          show_full_output: true
+          prompt: |
+            Fetch GitHub issue #${{ github.event.issue.number }} with:
+            gh issue view ${{ github.event.issue.number }} --comments
+
+            This is an architecture RFC. Generate a PRD from it without interviewing the user — all design decisions are already made. Map the RFC sections directly:
+            - Problem → Problem Statement
+            - Proposed Interface + Implementation Recommendations → Solution + Implementation Decisions
+            - Testing Strategy → Testing Decisions
+            - Infer user stories from the RFC context
+
+            Create the PRD as a GitHub issue using the write-a-prd issue template.
+            Then post a comment on the source RFC issue linking to the new PRD issue.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report failure
+        if: failure()
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "❌ **Skill chain failed** (RFC → PRD)
+
+          Workflow logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  prd-to-issues:
+    name: PRD → Slices
+    needs: detect
+    if: needs.detect.outputs.type == 'prd'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Break PRD into vertical slices
+        uses: anthropics/claude-code-action@v1
+        with:
+          allowed_bots: '*'
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowedTools "Bash(gh:*),Bash(git:*),Read,Glob,Grep,WebSearch"'
+          show_full_output: true
+          prompt: |
+            Fetch GitHub issue #${{ github.event.issue.number }} with:
+            gh issue view ${{ github.event.issue.number }} --comments
+
+            This is a PRD. Break it into tracer-bullet vertical slices:
+            1. Explore the codebase to understand the current architecture
+            2. Break the PRD into thin end-to-end slices (NOT horizontal layers)
+            3. Create each slice as a GitHub issue using the prd-to-issues issue template
+            4. Create issues in dependency order so blockers exist before dependent issues reference them
+
+            Do not ask for approval — create the issues directly.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report failure
+        if: failure()
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "❌ **Skill chain failed** (PRD → Slices)
+
+          Workflow logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  implement-slice:
+    name: Slice → Implementation
+    needs: detect
+    if: needs.detect.outputs.type == 'slice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Post progress comment
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "🤖 **Skill chain started** — implementing this slice using TDD.
+
+          Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Implement slice using TDD
+        uses: anthropics/claude-code-action@v1
+        with:
+          allowed_bots: '*'
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowedTools "Bash(gh:*),Bash(git:*),Bash(bun:*),Read,Write,Edit,Glob,Grep,WebSearch"'
+          show_full_output: true
+          prompt: |
+            Fetch GitHub issue #${{ github.event.issue.number }} with:
+            gh issue view ${{ github.event.issue.number }} --comments
+
+            Implement this slice using TDD:
+            1. Plan red-green-refactor cycles from the acceptance criteria
+            2. For each behavior: write a failing test (RED), write minimal code to pass (GREEN)
+            3. Refactor after all tests pass
+
+            Create a branch named slice/issue-${{ github.event.issue.number }}, commit, then open a PR:
+            gh pr create --title "Implement: ${{ github.event.issue.title }}" --body "Closes #${{ github.event.issue.number }}" --head slice/issue-${{ github.event.issue.number }} --base main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report failure
+        if: failure()
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "❌ **Skill chain failed** (Slice → Implementation)
+
+          Workflow logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
