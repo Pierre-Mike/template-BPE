@@ -2,7 +2,7 @@ name: PRD → Slices
 
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
 
 permissions:
   contents: write
@@ -32,7 +32,7 @@ jobs:
         with:
           allowed_bots: '*'
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: '--allowedTools "Bash(gh:*),Bash(git:*),Read,Glob,Grep,WebSearch"'
+          claude_args: '--allowedTools "Bash(gh:*),Bash(git:*),Read,Write,Glob,Grep,WebSearch"'
           show_full_output: true
           prompt: |
             Fetch GitHub issue #${{ github.event.issue.number }} with:
@@ -53,7 +53,8 @@ jobs:
 
             Create issues in dependency order (blockers first) and register each as a sub-issue of this PRD:
             REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
-            SLICE_URL=$(gh issue create --title "Slice: <title>" --body "<body>" --label <slice|slice-pending>)
+            Write each slice body to /tmp/slice-<n>.md and use --body-file to avoid shell escaping issues:
+            SLICE_URL=$(gh issue create --title "Slice: <title>" --body-file /tmp/slice-<n>.md --label <slice|slice-pending>)
             SLICE_NUMBER=$(echo "$SLICE_URL" | grep -o '[0-9]*$')
             gh api repos/$REPO/issues/${{ github.event.issue.number }}/sub_issues \
               --method POST --field sub_issue_id=$SLICE_NUMBER

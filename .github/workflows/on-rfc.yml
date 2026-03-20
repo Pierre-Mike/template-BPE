@@ -31,7 +31,7 @@ jobs:
         with:
           allowed_bots: '*'
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: '--allowedTools "Bash(gh:*),Bash(git:*),Read,Glob,Grep,WebSearch"'
+          claude_args: '--allowedTools "Bash(gh:*),Bash(git:*),Read,Write,Glob,Grep,WebSearch"'
           show_full_output: true
           prompt: |
             Fetch GitHub issue #${{ github.event.issue.number }} with:
@@ -43,8 +43,9 @@ jobs:
             - Testing Strategy → Testing Decisions
             - Infer user stories from the RFC context
 
-            Create the PRD as a GitHub issue with label "prd" and capture its number:
-            PRD_URL=$(gh issue create --title "PRD: <title>" --body "<body>" --label prd)
+            Create the PRD as a GitHub issue with label "prd" and capture its number.
+            Write the issue body to /tmp/prd-body.md first, then use --body-file to avoid shell escaping issues:
+            PRD_URL=$(gh issue create --title "PRD: <title>" --body-file /tmp/prd-body.md --label prd)
             PRD_NUMBER=$(echo "$PRD_URL" | grep -o '[0-9]*$')
 
             Register the PRD as a sub-issue of this RFC:
