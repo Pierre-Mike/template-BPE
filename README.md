@@ -132,6 +132,32 @@ Add the `branch-protection.yml` workflow (see AGENTS.md) to auto-sync rules when
 
 Both read from `branch-rules.json` — single source of truth.
 
+## AI Agents
+
+Ten specialized Claude agents are defined in `.claude/agents/`, mapping directly to the FCIS architecture:
+
+| Agent | Role |
+|-------|------|
+| `architect-lead` | Top-level orchestrator — delegates cross-cutting features and PR reviews to team leads |
+| `backend-lead` | Routes backend work to the correct architectural layer |
+| `backend-core` | Pure business logic in `core/` — no I/O, no side effects |
+| `backend-infra` | Effect services in `infra/` — one file per external system |
+| `backend-shell` | Hono routes + Effect.gen coordinators in `shell/` |
+| `frontend-lead` | Routes frontend work, enforces Hono RPC and Biome compliance |
+| `frontend-worker` | Astro pages, layouts, and typed API client in `apps/frontend/src/` |
+| `platform-lead` | Routes platform work to deploy or tooling agents |
+| `platform-deploy` | Cloudflare deployment config, wrangler, CI/CD workflows |
+| `platform-tooling` | Biome, Lefthook, Turborepo, TypeScript configs, branch protection |
+
+### Skills
+
+Two skills ship with the template in `.claude/skills/`:
+
+| Skill | Purpose |
+|-------|---------|
+| `ts-axioms` | Engineering axioms for TypeScript projects — canonical tooling choices (Biome, Lefthook, Effect-TS, Bun) |
+| `prd-to-issues` | Breaks a PRD into independently-grabbable GitHub issues using tracer-bullet vertical slices |
+
 ## AI Guardrails
 
 ### Protected Files
