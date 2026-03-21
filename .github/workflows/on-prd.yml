@@ -43,15 +43,13 @@ jobs:
             2. Break the PRD into thin end-to-end slices (NOT horizontal layers)
             3. Determine dependencies between slices before creating any issue
 
-            For each slice, include these two fields at the top of the body (omit if empty):
-            **Blocked by:** #X, #Y
-            **Unblocks:** #X, #Y
+            Use a two-pass approach so every issue has correct **Blocked by:** and **Unblocks:** fields:
 
-            Labeling rules:
-            - No blockers → label "slice" (triggers implementation immediately)
-            - Has blockers → label "slice-pending" (waits until all blockers close)
-
-            Create issues in dependency order (blockers first) and register each as a sub-issue of this PRD:
+            PASS 1 — Create all slice issues (blockers first).
+            - Include **Blocked by:** #X, #Y at the top of the body (omit if none).
+            - Omit **Unblocks:** for now (dependent issue numbers are not known yet).
+            - Label: no blockers → "slice", has blockers → "slice-pending".
+            - Record a mapping of logical slice name → issue number as you go.
             REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
             Write each slice body to /tmp/slice-<n>.md and use --body-file to avoid shell escaping issues:
             SLICE_URL=$(gh issue create --title "Slice: <title>" --body-file /tmp/slice-<n>.md --label <slice|slice-pending>)
@@ -59,7 +57,12 @@ jobs:
             gh api repos/$REPO/issues/${{ github.event.issue.number }}/sub_issues \
               --method POST --field sub_issue_id=$SLICE_NUMBER
 
-            Do not ask for approval — create the issues directly.
+            PASS 2 — Back-fill **Unblocks:** on every blocker issue.
+            - For each slice that blocks others, fetch its current body, append **Unblocks:** #X, #Y
+              (using the real issue numbers from Pass 1), write to /tmp/edit-<n>.md, and run:
+            gh issue edit <NUMBER> --body-file /tmp/edit-<n>.md
+
+            Do not ask for approval — create and edit the issues directly.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
