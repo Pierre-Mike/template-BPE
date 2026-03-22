@@ -1,25 +1,22 @@
 /**
- * TDD: RED phase — structural invariants for @template-bpe/api-contract.
+ * Structural invariants for @template-bpe/api-contract.
  *
- * Cycle 1: api-contract has zero runtime dependencies
+ * Cycle 1: api-contract only has allowed runtime dependencies
  * Cycle 2: cast isolation — `as unknown as` never appears in apps/frontend/
- *
- * These tests encode the same checks that run in CI, making the invariants
- * machine-verified locally before a push.
  */
 import { describe, expect, it } from "bun:test";
 import { join, resolve } from "node:path";
-import { findCastViolations, hasNoRuntimeDeps } from "./invariants";
+import { findCastViolations, hasOnlyAllowedDeps } from "./invariants";
 
 const REPO_ROOT = resolve(import.meta.dir, "../../../");
 
-// --- Cycle 1: api-contract has zero runtime dependencies ---
-describe("api-contract: zero runtime dependencies", () => {
-	it("packages/api-contract/package.json has no 'dependencies' key", () => {
+// --- Cycle 1: api-contract only has allowed runtime dependencies ---
+describe("api-contract: allowed runtime dependencies", () => {
+	it("only permits @template-bpe/backend and hono as dependencies", () => {
 		const pkgPath = join(REPO_ROOT, "packages/api-contract/package.json");
 		expect(
-			hasNoRuntimeDeps(pkgPath),
-			"api-contract must not have a 'dependencies' key — use devDependencies only",
+			hasOnlyAllowedDeps(pkgPath),
+			"api-contract must only depend on @template-bpe/backend and hono",
 		).toBe(true);
 	});
 });

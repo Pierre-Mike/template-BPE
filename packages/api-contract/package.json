@@ -11,7 +11,10 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"hono": "^4.12.8",
 		"typescript": "^5.9.3"
+	},
+	"dependencies": {
+		"@template-bpe/backend": "workspace:*",
+		"hono": "^4.12.8"
 	}
 }

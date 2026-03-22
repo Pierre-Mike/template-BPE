@@ -7,10 +7,15 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-/** Returns true if packages/api-contract/package.json has no "dependencies" key. */
-export function hasNoRuntimeDeps(pkgJsonPath: string): boolean {
+/** Allowed runtime dependencies for api-contract. */
+const ALLOWED_DEPS = new Set(["@template-bpe/backend", "hono"]);
+
+/** Returns true if api-contract only has allowed runtime dependencies. */
+export function hasOnlyAllowedDeps(pkgJsonPath: string): boolean {
 	const pkg = JSON.parse(readFileSync(pkgJsonPath, "utf-8")) as Record<string, unknown>;
-	return !("dependencies" in pkg);
+	const deps = pkg["dependencies"] as Record<string, string> | undefined;
+	if (!deps) return true;
+	return Object.keys(deps).every((dep) => ALLOWED_DEPS.has(dep));
 }
 
 /** Recursively collect .ts/.tsx files under dir, excluding node_modules. */

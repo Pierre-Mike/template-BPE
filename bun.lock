@@ -21,7 +21,6 @@
         "hono": "^4.12.8",
       },
       "devDependencies": {
-        "@template-bpe/api-contract": "workspace:*",
         "wrangler": "^4.74.0",
       },
     },
@@ -41,8 +40,11 @@
     "packages/api-contract": {
       "name": "@template-bpe/api-contract",
       "version": "0.0.0",
-      "devDependencies": {
+      "dependencies": {
+        "@template-bpe/backend": "workspace:*",
         "hono": "^4.12.8",
+      },
+      "devDependencies": {
         "typescript": "^5.9.3",
       },
     },
