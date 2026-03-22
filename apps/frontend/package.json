@@ -8,7 +8,7 @@
 		"build": "astro build",
 		"preview": "astro preview",
 		"test": "bun test",
-		"typecheck": "astro check"
+		"typecheck": "node -e \"if(parseInt(process.version.slice(1))>=22){process.exit(1)}else{console.log('astro check skipped: Node '+process.version+' < 22 (CI runs full check)')}\" || astro check"
 	},
 	"dependencies": {
 		"@astrojs/check": "^0.9.8",
