@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.PAT }}
 
       - name: Configure git
         run: |
@@ -33,7 +34,7 @@ jobs:
 
           Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
 
       - name: Implement slice using TDD
         uses: anthropics/claude-code-action@v1
@@ -54,7 +55,7 @@ jobs:
             Create a branch named slice/issue-${{ github.event.issue.number }}, commit, then open a PR:
             gh pr create --title "Implement: ${{ github.event.issue.title }}" --body "Closes #${{ github.event.issue.number }}" --head slice/issue-${{ github.event.issue.number }} --base main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
 
       - name: Report failure
         if: failure()
@@ -63,4 +64,4 @@ jobs:
 
           Workflow logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
