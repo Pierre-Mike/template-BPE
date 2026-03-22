@@ -30,6 +30,7 @@
       "dependencies": {
         "@astrojs/check": "^0.9.8",
         "@astrojs/cloudflare": "^13.1.2",
+        "@template-bpe/api-contract": "workspace:*",
         "@template-bpe/backend": "workspace:*",
         "astro": "^6.0.5",
         "hono": "^4.12.8",
