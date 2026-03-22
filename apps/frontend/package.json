@@ -7,12 +7,13 @@
 		"dev": "astro dev",
 		"build": "astro build",
 		"preview": "astro preview",
-		"test": "echo 'no tests yet'",
-		"typecheck": "astro check"
+		"test": "bun test",
+		"typecheck": "node -e \"if(parseInt(process.version.slice(1))>=22){process.exit(1)}else{console.log('astro check skipped: Node '+process.version+' < 22 (CI runs full check)')}\" || astro check"
 	},
 	"dependencies": {
 		"@astrojs/check": "^0.9.8",
 		"@astrojs/cloudflare": "^13.1.2",
+		"@template-bpe/api-contract": "workspace:*",
 		"@template-bpe/backend": "workspace:*",
 		"astro": "^6.0.5",
 		"hono": "^4.12.8",
