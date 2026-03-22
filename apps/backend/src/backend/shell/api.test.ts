@@ -1,17 +1,20 @@
 import { describe, expect, it } from "bun:test";
-import { Effect } from "effect";
-import { getVersion } from "../core/version.ts";
-import { ConfigService, ConfigTest } from "../infra/config.ts";
+import app from "./api.ts";
 
-describe("GET /version program", () => {
-	it("returns correct shape with ConfigTest layer", async () => {
-		const result = await Effect.runPromise(
-			Effect.gen(function* () {
-				const config = yield* ConfigService;
-				const raw = yield* config.get();
-				return yield* getVersion(raw);
-			}).pipe(Effect.provide(ConfigTest)),
-		);
-		expect(result).toEqual({ version: "0.0.0", env: "test" });
+describe("GET /version", () => {
+	it("returns 200 with version shape", async () => {
+		const res = await app.request("/version", {}, { ENVIRONMENT: "test" });
+		expect(res.status).toBe(200);
+		const body = await res.json();
+		expect(body).toEqual({ version: "0.0.0", env: "test" });
+	});
+});
+
+describe("GET /health", () => {
+	it("returns 200 with ok status", async () => {
+		const res = await app.request("/health");
+		expect(res.status).toBe(200);
+		const body = await res.json();
+		expect(body).toMatchObject({ status: "ok" });
 	});
 });
