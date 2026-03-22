@@ -23,6 +23,27 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.PAT }}
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Install dependencies and hooks
+        run: |
+          bun install --frozen-lockfile
+          bunx lefthook install
+
+      - name: Install gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz | tar xz -C /usr/local/bin gitleaks
+
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
