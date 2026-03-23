@@ -3,18 +3,34 @@ main = "src/backend/main.ts"
 compatibility_date = "2025-03-17"
 
 # ---------------------------------------------------------------------------
-# Deployment binding examples — all blocks below are commented out.
-# Uncomment and fill in the placeholders to activate a binding.
+# DEPLOYMENT BINDING EXAMPLES
+# All sections below are commented out — they serve as documentation-in-code.
+# Uncomment and fill in real values to activate a binding.
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# D1 DATABASE BINDING
+# Wires a Cloudflare D1 (SQLite-compatible) database to your Worker.
+# The NoteRepository infra layer is designed to consume this "DB" binding.
+# ---------------------------------------------------------------------------
 # [[d1_databases]]
-# binding = "DB"           # The variable name exposed to your Worker (env.DB)
-# database_name = "my-d1-database"   # Human-readable name for the D1 database
+# binding = "DB"          # The name your Worker code uses (env.DB)
+# database_name = "my-d1-database"   # Human-readable name in the Cloudflare dashboard
 # database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # UUID from `wrangler d1 create`
 
+# ---------------------------------------------------------------------------
+# KV NAMESPACE BINDING (alternative to D1 for key-value storage)
+# Use this when you need low-latency edge reads without relational structure.
+# ---------------------------------------------------------------------------
 # [[kv_namespaces]]
-# binding = "MY_KV"        # The variable name exposed to your Worker (env.MY_KV)
-# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"  # ID from `wrangler kv namespace create`
+# binding = "MY_KV"       # The name your Worker code uses (env.MY_KV)
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"  # ID from `wrangler kv:namespace create`
 
+# ---------------------------------------------------------------------------
+# ENVIRONMENT VARIABLES
+# Plain-text variables exposed to the Worker via env.<KEY>.
+# For secrets use `wrangler secret put <KEY>` instead (never commit secrets).
+# ---------------------------------------------------------------------------
 # [vars]
-# MY_ENV_VAR = "some-value"   # Plain-text environment variable exposed to your Worker
+# ENVIRONMENT = "production"  # Example: runtime environment label
+# LOG_LEVEL = "info"          # Example: logging verbosity
