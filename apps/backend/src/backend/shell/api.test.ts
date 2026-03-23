@@ -4,6 +4,15 @@ import { Hono } from "hono";
 import app from "./api.ts";
 import { routeEffect } from "./effect-handler.ts";
 
+// RED → GREEN: shell/api.ts must never call Effect.runPromise directly.
+// Effect lifecycle is owned by effect-handler.ts; api.ts only composes routes.
+describe("boundary invariant: no raw Effect.runPromise in api.ts", () => {
+	it("shell/api.ts does not contain Effect.runPromise(", async () => {
+		const source = await Bun.file(new URL("./api.ts", import.meta.url)).text();
+		expect(source).not.toContain("Effect.runPromise(");
+	});
+});
+
 describe("GET /version", () => {
 	it("returns 200 with version shape", async () => {
 		const res = await app.request("/version", {}, { ENVIRONMENT: "test" });

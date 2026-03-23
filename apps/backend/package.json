@@ -12,7 +12,8 @@
 		"deploy": "wrangler deploy",
 		"start": "wrangler dev",
 		"test": "bun test",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"lint:deps": "depcruise src --config .dependency-cruiser.cjs"
 	},
 	"dependencies": {
 		"@effect/schema": "^0.75.5",
@@ -20,6 +21,7 @@
 		"hono": "^4.12.8"
 	},
 	"devDependencies": {
+		"dependency-cruiser": "^17.3.9",
 		"wrangler": "^4.74.0"
 	}
 }
