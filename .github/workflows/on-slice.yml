@@ -157,6 +157,9 @@ jobs:
 
             Create a branch named slice/issue-${{ github.event.issue.number }}, commit, then open a PR:
             gh pr create --title "Implement: ${{ github.event.issue.title }}" --body "Closes #${{ github.event.issue.number }}" --head slice/issue-${{ github.event.issue.number }} --base main
+
+            Then enable auto-merge:
+            gh pr merge --auto --squash slice/issue-${{ github.event.issue.number }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 
@@ -185,6 +188,9 @@ jobs:
 
             Create a branch named slice/issue-${{ github.event.issue.number }}, commit, then open a PR:
             gh pr create --title "Implement: ${{ github.event.issue.title }}" --body "Closes #${{ github.event.issue.number }}" --head slice/issue-${{ github.event.issue.number }} --base main
+
+            Then enable auto-merge:
+            gh pr merge --auto --squash slice/issue-${{ github.event.issue.number }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 

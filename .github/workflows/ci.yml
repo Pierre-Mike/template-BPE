@@ -83,6 +83,54 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  protected-file-check:
+    name: Protected File Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Skip for human PRs
+        if: github.actor != 'github-actions[bot]'
+        run: echo "Human PR — protected file check not applicable."
+      - uses: actions/checkout@v4
+        if: github.actor == 'github-actions[bot]'
+        with:
+          fetch-depth: 0
+      - name: Reject bot PRs that touch protected files
+        if: github.actor == 'github-actions[bot]'
+        run: |
+          PROTECTED_PATTERNS=(
+            "AGENTS.md"
+            ".claude/"
+            "turbo.json"
+            ".github/"
+            "biome.json"
+            "lefthook.yml"
+            "tsconfig.json"
+            "tsconfig.base.json"
+            "package.json"
+            "wrangler.toml"
+          )
+
+          CHANGED=$(git diff --name-only origin/main...HEAD)
+          VIOLATIONS=""
+
+          for file in $CHANGED; do
+            for pattern in "${PROTECTED_PATTERNS[@]}"; do
+              case "$file" in
+                $pattern|$pattern*|*/$pattern)
+                  VIOLATIONS="$VIOLATIONS\n  - $file (matches $pattern)"
+                  ;;
+              esac
+            done
+          done
+
+          if [ -n "$VIOLATIONS" ]; then
+            echo "::error::Bot PR touches protected files:$VIOLATIONS"
+            exit 1
+          fi
+
+          echo "No protected files touched."
+
   build:
     name: Build
     needs: [type-check, lint, test, colocated-tests]
