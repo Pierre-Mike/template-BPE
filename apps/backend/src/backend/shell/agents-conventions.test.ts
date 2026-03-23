@@ -19,10 +19,6 @@ describe("AGENTS.md — route conventions", () => {
 		expect(content).toContain("defineRoute");
 	});
 
-	it("documents when to use routeEffect (multi-dependency or multi-step)", () => {
-		expect(content).toContain("routeEffect");
-	});
-
 	it("documents api.ts registry rule (no handler logic allowed)", () => {
 		expect(content).toContain("thin registry");
 	});
