@@ -1,3 +1,20 @@
 name = "template-bpe-backend"
 main = "src/backend/main.ts"
 compatibility_date = "2025-03-17"
+
+# ---------------------------------------------------------------------------
+# Deployment binding examples — all blocks below are commented out.
+# Uncomment and fill in the placeholders to activate a binding.
+# ---------------------------------------------------------------------------
+
+# [[d1_databases]]
+# binding = "DB"           # The variable name exposed to your Worker (env.DB)
+# database_name = "my-d1-database"   # Human-readable name for the D1 database
+# database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # UUID from `wrangler d1 create`
+
+# [[kv_namespaces]]
+# binding = "MY_KV"        # The variable name exposed to your Worker (env.MY_KV)
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"  # ID from `wrangler kv namespace create`
+
+# [vars]
+# MY_ENV_VAR = "some-value"   # Plain-text environment variable exposed to your Worker
