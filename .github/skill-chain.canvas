@@ -1,0 +1,280 @@
+{
+  "nodes": [
+    {
+      "type": "text",
+      "id": "title",
+      "x": -200,
+      "y": -580,
+      "width": 700,
+      "height": 80,
+      "text": "# Skill Chain: RFC → PRD → Slices → Implementation"
+    },
+    {
+      "type": "text",
+      "id": "rfc",
+      "x": 0,
+      "y": -480,
+      "width": 300,
+      "height": 100,
+      "color": "1",
+      "text": "## RFC Issue\n`label: rfc`\n\nHuman or AI creates an RFC issue"
+    },
+    {
+      "type": "text",
+      "id": "rfc-dedup",
+      "x": 0,
+      "y": -320,
+      "width": 300,
+      "height": 80,
+      "color": "3",
+      "text": "### Idempotency Guard\nSub-issues API: PRD already exists?\n**Yes → skip** | No → continue"
+    },
+    {
+      "type": "text",
+      "id": "on-rfc",
+      "x": 0,
+      "y": -180,
+      "width": 300,
+      "height": 100,
+      "color": "4",
+      "text": "## `on-rfc.yml`\n`trigger: labeled`\n\nClaude generates PRD from RFC\nRegisters PRD as sub-issue"
+    },
+    {
+      "type": "text",
+      "id": "prd",
+      "x": 0,
+      "y": -20,
+      "width": 300,
+      "height": 100,
+      "color": "1",
+      "text": "## PRD Issue\n`label: prd`\n\nCreated automatically with sub-issue link"
+    },
+    {
+      "type": "text",
+      "id": "prd-dedup",
+      "x": 0,
+      "y": 160,
+      "width": 300,
+      "height": 80,
+      "color": "3",
+      "text": "### Idempotency Guard\nSub-issues API: slices already exist?\n**Yes → skip** | No → continue"
+    },
+    {
+      "type": "text",
+      "id": "on-prd",
+      "x": 0,
+      "y": 320,
+      "width": 300,
+      "height": 120,
+      "color": "4",
+      "text": "## `on-prd.yml`\n`trigger: labeled`\n\nClaude breaks PRD into vertical slices\nPass 1: create issues\nPass 2: back-fill Unblocks"
+    },
+    {
+      "type": "text",
+      "id": "slice",
+      "x": -220,
+      "y": 560,
+      "width": 260,
+      "height": 100,
+      "color": "6",
+      "text": "## Slice (ready)\n`label: slice`\n\nNo blockers — ready to implement"
+    },
+    {
+      "type": "text",
+      "id": "slice-pending",
+      "x": 260,
+      "y": 540,
+      "width": 260,
+      "height": 100,
+      "color": "5",
+      "text": "## Slice (blocked)\n`label: slice-pending`\n\nWaiting on other slices"
+    },
+    {
+      "type": "text",
+      "id": "slice-dedup",
+      "x": -220,
+      "y": 720,
+      "width": 260,
+      "height": 80,
+      "color": "3",
+      "text": "### Idempotency Guard\nPR or branch already exists?\n**Yes → skip** | No → continue"
+    },
+    {
+      "type": "text",
+      "id": "on-slice",
+      "x": -220,
+      "y": 860,
+      "width": 260,
+      "height": 120,
+      "color": "4",
+      "text": "## `on-slice.yml`\n`trigger: opened, labeled`\n\nClaude implements via TDD\nCreates branch + PR"
+    },
+    {
+      "type": "text",
+      "id": "pr",
+      "x": -220,
+      "y": 1040,
+      "width": 260,
+      "height": 80,
+      "color": "2",
+      "text": "## Pull Request\n`Closes #N`\n\nCI runs, human reviews"
+    },
+    {
+      "type": "text",
+      "id": "merge",
+      "x": -220,
+      "y": 1180,
+      "width": 260,
+      "height": 80,
+      "color": "2",
+      "text": "## Human Merges PR\nIssue auto-closed via `Closes #N`"
+    },
+    {
+      "type": "text",
+      "id": "on-closed",
+      "x": 260,
+      "y": 810,
+      "width": 260,
+      "height": 140,
+      "color": "4",
+      "text": "## `on-slice-closed.yml`\n`trigger: closed`\n\nScans ALL `slice-pending` issues\nChecks if their blockers are closed\nPromotes unblocked → `slice`"
+    },
+    {
+      "type": "text",
+      "id": "loop-note",
+      "x": 260,
+      "y": 690,
+      "width": 260,
+      "height": 80,
+      "color": "5",
+      "text": "### Promotion\n`slice-pending` → `slice`\ntriggers `on-slice.yml` (labeled)"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-rfc-dedup",
+      "fromNode": "rfc",
+      "fromSide": "bottom",
+      "toNode": "rfc-dedup",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "labeled: rfc"
+    },
+    {
+      "id": "e-dedup-rfc",
+      "fromNode": "rfc-dedup",
+      "fromSide": "bottom",
+      "toNode": "on-rfc",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "no PRD yet"
+    },
+    {
+      "id": "e-rfc-prd",
+      "fromNode": "on-rfc",
+      "fromSide": "bottom",
+      "toNode": "prd",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "creates"
+    },
+    {
+      "id": "e-prd-dedup",
+      "fromNode": "prd",
+      "fromSide": "bottom",
+      "toNode": "prd-dedup",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "labeled: prd"
+    },
+    {
+      "id": "e-dedup-prd",
+      "fromNode": "prd-dedup",
+      "fromSide": "bottom",
+      "toNode": "on-prd",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "no slices yet"
+    },
+    {
+      "id": "e-prd-slice",
+      "fromNode": "on-prd",
+      "fromSide": "bottom",
+      "toNode": "slice",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "no blockers"
+    },
+    {
+      "id": "e-prd-pending",
+      "fromNode": "on-prd",
+      "fromSide": "bottom",
+      "toNode": "slice-pending",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "has blockers"
+    },
+    {
+      "id": "e-slice-dedup",
+      "fromNode": "slice",
+      "fromSide": "bottom",
+      "toNode": "slice-dedup",
+      "toSide": "top",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "e-dedup-impl",
+      "fromNode": "slice-dedup",
+      "fromSide": "bottom",
+      "toNode": "on-slice",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "no PR yet"
+    },
+    {
+      "id": "e-impl-pr",
+      "fromNode": "on-slice",
+      "fromSide": "bottom",
+      "toNode": "pr",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "creates"
+    },
+    {
+      "id": "e-pr-merge",
+      "fromNode": "pr",
+      "fromSide": "bottom",
+      "toNode": "merge",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "human approves"
+    },
+    {
+      "id": "e-merge-closed",
+      "fromNode": "merge",
+      "fromSide": "right",
+      "toNode": "on-closed",
+      "toSide": "bottom",
+      "toEnd": "arrow",
+      "label": "issue closed"
+    },
+    {
+      "id": "e-closed-promote",
+      "fromNode": "on-closed",
+      "fromSide": "top",
+      "toNode": "loop-note",
+      "toSide": "bottom",
+      "toEnd": "arrow",
+      "label": "all blockers closed"
+    },
+    {
+      "id": "e-promote-slice",
+      "fromNode": "loop-note",
+      "fromSide": "left",
+      "toNode": "slice",
+      "toSide": "right",
+      "toEnd": "arrow",
+      "label": "label → slice"
+    }
+  ]
+}
