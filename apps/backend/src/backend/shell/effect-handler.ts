@@ -111,42 +111,44 @@ export function routeEffect<R, E = never>(): RouteEffect<R, E> {
 	return new RouteEffectBuilder<R, E>([], undefined);
 }
 
-type RouteConfig<R, E, A> = [R] extends [never]
-	? {
-			deps?: never;
-			onError?: (error: E, c: AnyContext) => Response;
-			handler: (c: AnyContext) => Effect.Effect<A, E, never>;
-		}
-	: {
-			deps: ((c: AnyContext) => Layer.Layer<R>) | Layer.Layer<R>;
-			onError?: (error: E, c: AnyContext) => Response;
-			handler: (c: AnyContext) => Effect.Effect<A, E, R>;
-		};
+/** defineRoute overload 1: no deps — R must be never, `deps` is forbidden */
+export function defineRoute<R extends never, E = never, A = Response>(config: {
+	deps?: never;
+	onError?: (error: E, c: AnyContext) => Response;
+	handler: (c: AnyContext) => Effect.Effect<A, E, R>;
+}): (c: AnyContext) => Promise<A>;
 
-export function defineRoute<R = never, E = never, A = Response>(
-	config: RouteConfig<R, E, A>,
-): (c: AnyContext) => Promise<A> {
-	const { deps, onError, handler } = config as {
-		deps?: ((c: AnyContext) => Layer.Layer<R>) | Layer.Layer<R>;
-		onError?: (error: E, c: AnyContext) => Response;
-		handler: (c: AnyContext) => Effect.Effect<A, E, R>;
-	};
+/**
+ * defineRoute overload 2: with deps — R is not never, `deps` is required.
+ * The `[R] extends [never] ? never : Layer<R>` conditional makes `deps: never`
+ * when R=never (even though overload 1 should win), ensuring both overloads
+ * reject extra deps due to Layer<R>'s contravariance in ROut.
+ */
+export function defineRoute<R, E = never, A = Response>(config: {
+	deps: [R] extends [never] ? never : ((c: AnyContext) => Layer.Layer<R>) | Layer.Layer<R>;
+	onError?: (error: E, c: AnyContext) => Response;
+	handler: (c: AnyContext) => Effect.Effect<A, E, R>;
+}): (c: AnyContext) => Promise<A>;
 
-	let builder = routeEffect<R, E>();
+export function defineRoute(config: {
+	deps?: ((c: AnyContext) => Layer.Layer<never>) | Layer.Layer<never>;
+	onError?: (error: never, c: AnyContext) => Response;
+	handler: (c: AnyContext) => Effect.Effect<unknown, unknown, unknown>;
+}): (c: AnyContext) => Promise<unknown> {
+	let builder: RouteEffect<never, never>;
 
-	if (deps !== undefined) {
-		if (typeof deps === "function") {
-			builder = builder.provide(deps) as unknown as RouteEffect<R, E>;
-		} else {
-			builder = builder.provideStatic(deps) as unknown as RouteEffect<R, E>;
-		}
+	if (config.deps === undefined) {
+		builder = routeEffect<never>();
+	} else if (typeof config.deps === "function") {
+		builder = routeEffect<never>().provide(config.deps);
+	} else {
+		builder = routeEffect<never>().provideStatic(config.deps);
 	}
 
-	if (onError !== undefined) {
-		builder = builder.onError(onError);
+	if (config.onError !== undefined) {
+		builder = builder.onError(config.onError);
 	}
 
-	return (builder as unknown as RouteEffect<never, E>).handle(
-		handler as (c: AnyContext) => Effect.Effect<A, E, never>,
-	);
+	// Overload signatures guarantee R and E are resolved at call sites; cast to satisfy handle's constraint
+	return builder.handle(config.handler as (c: AnyContext) => Effect.Effect<unknown, never, never>);
 }

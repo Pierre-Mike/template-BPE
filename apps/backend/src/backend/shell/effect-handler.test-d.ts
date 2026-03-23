@@ -47,37 +47,37 @@ export const _partialProvide = routeEffect<ConfigService | AnotherService>()
 	.handle(() => Effect.succeed(new Response()));
 
 // ---------------------------------------------------------------------------
-// defineRoute — POSITIVE CASES — must compile without error
+// defineRoute POSITIVE CASES — must compile without error
 // ---------------------------------------------------------------------------
 
-// factory deps (per-request function)
-export const _defineRouteFactory = defineRoute<ConfigService>({
+// factory deps when R ≠ never
+export const _defineRouteFactoryDeps = defineRoute<ConfigService>({
 	deps: () => ConfigTest,
 	handler: () => Effect.succeed(new Response()),
 });
 
-// static deps (plain layer)
-export const _defineRouteStatic = defineRoute<ConfigService>({
+// static deps when R ≠ never
+export const _defineRouteStaticDeps = defineRoute<ConfigService>({
 	deps: ConfigTest,
 	handler: () => Effect.succeed(new Response()),
 });
 
-// no deps (R = never) — deps must be omitted
+// no deps when R = never
 export const _defineRouteNoDeps = defineRoute({
 	handler: () => Effect.succeed(new Response()),
 });
 
 // ---------------------------------------------------------------------------
-// defineRoute — NEGATIVE CASES — must be TypeScript errors
+// defineRoute NEGATIVE CASES — must be TypeScript errors
 // ---------------------------------------------------------------------------
 
-// deps is required when R ≠ never — omitting it must be a tsc error
+// deps omitted when R ≠ never — overload 2 requires deps, overload 1 rejects R≠never via `R extends never`
 // @ts-expect-error — deps is required when R is not never
 export const _defineRouteMissingDeps = defineRoute<ConfigService>({
 	handler: () => Effect.succeed(new Response()),
 });
 
-// deps is forbidden when R = never — passing it must be a tsc error
+// deps provided when R = never — both overloads reject it (deps: never on each)
 export const _defineRouteForbiddenDeps = defineRoute<never>({
 	// @ts-expect-error — deps is forbidden when R = never
 	deps: ConfigTest,

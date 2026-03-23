@@ -95,7 +95,7 @@ describe("routeEffect", () => {
 
 describe("defineRoute", () => {
 	describe("factory deps", () => {
-		it("runs the effect when deps is a factory function", async () => {
+		it("runs the effect with a per-request layer factory", async () => {
 			const handler = defineRoute<ConfigService>({
 				deps: () => ConfigTest,
 				handler: (c) =>
@@ -133,7 +133,7 @@ describe("defineRoute", () => {
 	});
 
 	describe("static deps", () => {
-		it("runs the effect when deps is a static layer", async () => {
+		it("runs the effect with a static layer", async () => {
 			const handler = defineRoute<ConfigService>({
 				deps: ConfigTest,
 				handler: (c) =>
@@ -152,15 +152,10 @@ describe("defineRoute", () => {
 		});
 	});
 
-	describe("no deps (R=never)", () => {
-		it("runs the effect without any deps", async () => {
+	describe("no deps (R = never)", () => {
+		it("runs the effect without any layer", async () => {
 			const handler = defineRoute({
-				handler: () =>
-					Effect.succeed(
-						new Response(JSON.stringify({ ok: true }), {
-							headers: { "Content-Type": "application/json" },
-						}),
-					),
+				handler: (c) => Effect.succeed(c.json({ ok: true }, 200)),
 			});
 
 			const testApp = new Hono().get("/test", handler);
@@ -171,19 +166,19 @@ describe("defineRoute", () => {
 		});
 	});
 
-	describe("custom onError", () => {
+	describe("onError", () => {
 		it("maps a typed error to a custom response", async () => {
 			const handler = defineRoute<ConfigService, Error>({
 				deps: () => ConfigTest,
 				onError: (err, c) => c.json({ message: err.message }, 422),
-				handler: () => Effect.fail(new Error("oops")),
+				handler: () => Effect.fail(new Error("custom")),
 			});
 
 			const testApp = new Hono().get("/test", handler);
 			const res = await testApp.request("/test");
 			expect(res.status).toBe(422);
 			const body = await res.json();
-			expect(body).toEqual({ message: "oops" });
+			expect(body).toEqual({ message: "custom" });
 		});
 
 		it("returns 500 JSON when no onError and effect fails", async () => {
