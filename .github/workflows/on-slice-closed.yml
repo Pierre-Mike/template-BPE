@@ -32,10 +32,14 @@ jobs:
           for CANDIDATE in $PENDING; do
             echo "Checking slice-pending #$CANDIDATE..."
 
-            # Extract blocker issue numbers from the body
-            # Supports both "**Blocked by:** #X, #Y" and "## Blocked by\n- #X\n- #Y" formats
+            # Extract blocker issue numbers from ONLY the "Blocked by" section.
+            # Supports: "**Blocked by:** #X, #Y" and "## Blocked by\n- #X\n- #Y"
+            # IMPORTANT: Only scan the Blocked-by section — not the entire body.
+            # Other sections may reference issues contextually (e.g. "see #58"),
+            # which would create false blocker edges and circular dependencies.
             CANDIDATE_BODY=$(gh issue view "$CANDIDATE" --repo "$REPO" --json body -q .body)
-            BLOCKERS=$(echo "$CANDIDATE_BODY" | grep -oE '#[0-9]+' | grep -oE '[0-9]+' | sort -u)
+            BLOCKED_SECTION=$(echo "$CANDIDATE_BODY" | sed -n '/^## Blocked by/,/^## /{ /^## Blocked by/d; /^## /d; p; }; /^\*\*Blocked by[:\*]/{ s/^\*\*Blocked by[:\*]*//; p; }')
+            BLOCKERS=$(echo "$BLOCKED_SECTION" | grep -oE '#[0-9]+' | grep -oE '[0-9]+' | sort -u)
 
             if [ -z "$BLOCKERS" ]; then
               echo "  No blockers found in body — skipping (may need manual review)."
