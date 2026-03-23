@@ -110,3 +110,43 @@ class RouteEffectBuilder<R, E> implements RouteEffect<R, E> {
 export function routeEffect<R, E = never>(): RouteEffect<R, E> {
 	return new RouteEffectBuilder<R, E>([], undefined);
 }
+
+type RouteConfig<R, E, A> = [R] extends [never]
+	? {
+			deps?: never;
+			onError?: (error: E, c: AnyContext) => Response;
+			handler: (c: AnyContext) => Effect.Effect<A, E, never>;
+		}
+	: {
+			deps: ((c: AnyContext) => Layer.Layer<R>) | Layer.Layer<R>;
+			onError?: (error: E, c: AnyContext) => Response;
+			handler: (c: AnyContext) => Effect.Effect<A, E, R>;
+		};
+
+export function defineRoute<R = never, E = never, A = Response>(
+	config: RouteConfig<R, E, A>,
+): (c: AnyContext) => Promise<A> {
+	const { deps, onError, handler } = config as {
+		deps?: ((c: AnyContext) => Layer.Layer<R>) | Layer.Layer<R>;
+		onError?: (error: E, c: AnyContext) => Response;
+		handler: (c: AnyContext) => Effect.Effect<A, E, R>;
+	};
+
+	let builder = routeEffect<R, E>();
+
+	if (deps !== undefined) {
+		if (typeof deps === "function") {
+			builder = builder.provide(deps) as unknown as RouteEffect<R, E>;
+		} else {
+			builder = builder.provideStatic(deps) as unknown as RouteEffect<R, E>;
+		}
+	}
+
+	if (onError !== undefined) {
+		builder = builder.onError(onError);
+	}
+
+	return (builder as unknown as RouteEffect<never, E>).handle(
+		handler as (c: AnyContext) => Effect.Effect<A, E, never>,
+	);
+}

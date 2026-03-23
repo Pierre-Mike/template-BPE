@@ -5,7 +5,7 @@
  */
 import { type Context, Effect, type Layer } from "effect";
 import { type ConfigService, ConfigTest } from "../infra/config.ts";
-import { routeEffect } from "./effect-handler.ts";
+import { defineRoute, routeEffect } from "./effect-handler.ts";
 
 // ---------------------------------------------------------------------------
 // POSITIVE CASES — must compile without error
@@ -45,3 +45,41 @@ declare const _anotherLayer: Layer.Layer<AnotherService>;
 export const _partialProvide = routeEffect<ConfigService | AnotherService>()
 	.provide(() => ConfigTest)
 	.handle(() => Effect.succeed(new Response()));
+
+// ---------------------------------------------------------------------------
+// defineRoute — POSITIVE CASES — must compile without error
+// ---------------------------------------------------------------------------
+
+// factory deps (per-request function)
+export const _defineRouteFactory = defineRoute<ConfigService>({
+	deps: () => ConfigTest,
+	handler: () => Effect.succeed(new Response()),
+});
+
+// static deps (plain layer)
+export const _defineRouteStatic = defineRoute<ConfigService>({
+	deps: ConfigTest,
+	handler: () => Effect.succeed(new Response()),
+});
+
+// no deps (R = never) — deps must be omitted
+export const _defineRouteNoDeps = defineRoute({
+	handler: () => Effect.succeed(new Response()),
+});
+
+// ---------------------------------------------------------------------------
+// defineRoute — NEGATIVE CASES — must be TypeScript errors
+// ---------------------------------------------------------------------------
+
+// deps is required when R ≠ never — omitting it must be a tsc error
+// @ts-expect-error — deps is required when R is not never
+export const _defineRouteMissingDeps = defineRoute<ConfigService>({
+	handler: () => Effect.succeed(new Response()),
+});
+
+// deps is forbidden when R = never — passing it must be a tsc error
+export const _defineRouteForbiddenDeps = defineRoute<never>({
+	// @ts-expect-error — deps is forbidden when R = never
+	deps: ConfigTest,
+	handler: () => Effect.succeed(new Response()),
+});
