@@ -35,23 +35,45 @@ apps/
 │       ├── api.ts        # hc<AppType> typed client (zero codegen)
 │       ├── layouts/
 │       └── pages/
-packages/                 # Shared workspace packages
+packages/
+└── api-contract/         # Typed Hono RPC client derived from backend's AppType
+    └── src/index.ts      # createBackendClient(url) — hc<AppType>(url)
 ```
 
 ### Hono RPC (End-to-End Type Safety)
 
-The backend exports its route types, the frontend consumes them — no codegen, no schema files:
+Types flow automatically from backend routes to the frontend — no codegen, no manual sync:
+
+```
+Backend routes (AppType)        packages/api-contract           Frontend
+shell/api.ts ──────────────►  createBackendClient(url)  ◄──── src/api.ts
+    typeof app                   hc<AppType>(url)              re-exports client
+```
 
 ```typescript
-// Backend: shell/api.ts
+// 1. Backend defines routes — types are inferred automatically
+// apps/backend/src/backend/shell/api.ts
 const app = new Hono().get("/health", (c) => c.json({ status: "ok" }));
 export type AppType = typeof app;
 
-// Frontend: src/api.ts
+// 2. api-contract package creates a typed client from AppType
+// packages/api-contract/src/index.ts
 import type { AppType } from "@template-bpe/backend/types";
-const api = hc<AppType>("http://localhost:8787");
+import { hc } from "hono/client";
+export function createBackendClient(baseUrl: string) {
+  return hc<AppType>(baseUrl);
+}
+
+// 3. Frontend imports the client — fully typed, zero manual types
+// apps/frontend/src/api.ts
+export { createBackendClient } from "@template-bpe/api-contract";
+
+// Usage in pages:
+const api = createBackendClient("http://localhost:8787");
 const res = await api.health.$get(); // fully typed
 ```
+
+**Adding a new route only requires changing `shell/api.ts`** — the types propagate to the frontend automatically through `AppType`.
 
 ## Quick Start
 

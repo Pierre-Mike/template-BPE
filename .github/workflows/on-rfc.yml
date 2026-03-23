@@ -2,7 +2,7 @@ name: RFC → PRD
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [labeled]
 
 permissions:
   contents: write
@@ -18,15 +18,31 @@ jobs:
     timeout-minutes: 30
 
     steps:
+      - name: Skip if PRD already exists
+        id: dedup
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXISTING=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/sub_issues" --jq '[.[] | select(.labels[].name == "prd")] | length' 2>/dev/null || echo "0")
+          if [ "$EXISTING" -gt "0" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "PRD sub-issue already exists — skipping."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.dedup.outputs.skip != 'true'
 
       - name: Ensure labels exist
+        if: steps.dedup.outputs.skip != 'true'
         run: |
           gh label create prd --color 0075ca --description "Product Requirements Document" --force
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate PRD from RFC
+        if: steps.dedup.outputs.skip != 'true'
         uses: anthropics/claude-code-action@v1
         with:
           allowed_bots: '*'
@@ -58,7 +74,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report failure
-        if: failure()
+        if: failure() && steps.dedup.outputs.skip != 'true'
         run: |
           gh issue comment ${{ github.event.issue.number }} --body "❌ **Skill chain failed** (RFC → PRD)
 

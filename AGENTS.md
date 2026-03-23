@@ -17,8 +17,9 @@ apps/
 │       │   └── api.ts  # Route definitions, exports AppType for RPC
 │       └── main.ts   # Composition root — re-exports Hono app as Workers fetch handler
 ├── frontend/         # Frontend app — imports typed API client from backend
-│   └── src/api.ts    # hc<AppType> typed client (zero codegen)
-packages/             # Shared packages
+│   └── src/api.ts    # re-exports createBackendClient from api-contract
+packages/
+└── api-contract/     # Typed Hono RPC client derived from backend AppType
 turbo.json            # Task pipeline + caching
 tsconfig.base.json    # Shared TS config (all apps extend this)
 biome.json            # Root-level Biome (Turborepo best practice)
@@ -35,7 +36,9 @@ lefthook.yml          # Git hooks
 ## Hono RPC (End-to-End Type Safety)
 
 - Backend exports `AppType` from `shell/api.ts` via `"exports": { "./types" }` in package.json
-- Frontend imports `hc<AppType>` from `hono/client` — fully typed params, query, body, response
+- `packages/api-contract` imports `AppType` and creates a typed `hc<AppType>` client via `createBackendClient(url)`
+- Frontend re-exports `createBackendClient` from `@template-bpe/api-contract` — fully typed params, query, body, response
+- **Adding a new route only requires changing `shell/api.ts`** — types propagate automatically
 - Zero codegen, zero runtime overhead — types are workspace-linked at build time
 - **Deploy target:** Cloudflare Workers (V8 isolates, not Bun — no Bun-specific APIs in backend code)
 
