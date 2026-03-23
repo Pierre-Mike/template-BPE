@@ -5,7 +5,7 @@
  */
 import { type Context, Effect, type Layer } from "effect";
 import { type ConfigService, ConfigTest } from "../infra/config.ts";
-import { routeEffect } from "./effect-handler.ts";
+import { defineRoute, routeEffect } from "./effect-handler.ts";
 
 // ---------------------------------------------------------------------------
 // POSITIVE CASES — must compile without error
@@ -45,3 +45,41 @@ declare const _anotherLayer: Layer.Layer<AnotherService>;
 export const _partialProvide = routeEffect<ConfigService | AnotherService>()
 	.provide(() => ConfigTest)
 	.handle(() => Effect.succeed(new Response()));
+
+// ---------------------------------------------------------------------------
+// defineRoute POSITIVE CASES — must compile without error
+// ---------------------------------------------------------------------------
+
+// factory deps when R ≠ never
+export const _defineRouteFactoryDeps = defineRoute<ConfigService>({
+	deps: () => ConfigTest,
+	handler: () => Effect.succeed(new Response()),
+});
+
+// static deps when R ≠ never
+export const _defineRouteStaticDeps = defineRoute<ConfigService>({
+	deps: ConfigTest,
+	handler: () => Effect.succeed(new Response()),
+});
+
+// no deps when R = never
+export const _defineRouteNoDeps = defineRoute({
+	handler: () => Effect.succeed(new Response()),
+});
+
+// ---------------------------------------------------------------------------
+// defineRoute NEGATIVE CASES — must be TypeScript errors
+// ---------------------------------------------------------------------------
+
+// deps omitted when R ≠ never — overload 2 requires deps, overload 1 rejects R≠never via `R extends never`
+// @ts-expect-error — deps is required when R is not never
+export const _defineRouteMissingDeps = defineRoute<ConfigService>({
+	handler: () => Effect.succeed(new Response()),
+});
+
+// deps provided when R = never — both overloads reject it (deps: never on each)
+export const _defineRouteForbiddenDeps = defineRoute<never>({
+	// @ts-expect-error — deps is forbidden when R = never
+	deps: ConfigTest,
+	handler: () => Effect.succeed(new Response()),
+});
