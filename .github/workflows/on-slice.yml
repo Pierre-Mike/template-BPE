@@ -18,69 +18,123 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - name: Skip if already implemented
-        id: dedup
+      - name: Check attempt count and skip conditions
+        id: guard
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          EXISTING_PR=$(gh pr list --repo "${{ github.repository }}" --search "Closes #${{ github.event.issue.number }}" --state all --json number --jq '.[0].number // empty')
-          EXISTING_BRANCH=$(git ls-remote --heads origin "slice/issue-${{ github.event.issue.number }}" 2>/dev/null | head -1)
-          if [ -n "$EXISTING_PR" ] || [ -n "$EXISTING_BRANCH" ]; then
+          REPO="${{ github.repository }}"
+          MAX_ATTEMPTS=3
+
+          # Count previous attempt comments on this issue
+          ATTEMPTS=$(gh issue view "$ISSUE_NUMBER" --repo "$REPO" --json comments --jq '[.comments[].body | select(startswith("🤖 **Attempt"))] | length')
+          echo "Previous attempts: $ATTEMPTS"
+
+          # Check if issue is already closed (successfully merged)
+          STATE=$(gh issue view "$ISSUE_NUMBER" --repo "$REPO" --json state --jq '.state')
+          if [ "$STATE" = "CLOSED" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "Already implemented (PR #$EXISTING_PR or branch exists) — skipping."
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Issue already closed — skipping."
+            exit 0
           fi
 
+          # Check if a merged PR already exists
+          MERGED_PR=$(gh pr list --repo "$REPO" --search "Closes #$ISSUE_NUMBER" --state merged --json number --jq '.[0].number // empty')
+          if [ -n "$MERGED_PR" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "PR #$MERGED_PR already merged — skipping."
+            exit 0
+          fi
+
+          # Check max attempts
+          if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Max attempts ($MAX_ATTEMPTS) reached — giving up."
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPO" --body "🛑 **Max attempts ($MAX_ATTEMPTS) reached** — needs human intervention.
+
+          Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            exit 0
+          fi
+
+          ATTEMPT=$((ATTEMPTS + 1))
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "attempt=$ATTEMPT" >> "$GITHUB_OUTPUT"
+          echo "is_retry=$( [ $ATTEMPT -gt 1 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
-        if: steps.dedup.outputs.skip != 'true'
+        if: steps.guard.outputs.skip != 'true'
         with:
           fetch-depth: 0
           token: ${{ secrets.PAT }}
 
       - uses: actions/setup-node@v4
-        if: steps.dedup.outputs.skip != 'true'
+        if: steps.guard.outputs.skip != 'true'
         with:
           node-version: "22"
 
       - uses: oven-sh/setup-bun@v2
-        if: steps.dedup.outputs.skip != 'true'
+        if: steps.guard.outputs.skip != 'true'
 
       - uses: actions/cache@v4
-        if: steps.dedup.outputs.skip != 'true'
+        if: steps.guard.outputs.skip != 'true'
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: bun-${{ runner.os }}-
 
       - name: Install dependencies and hooks
-        if: steps.dedup.outputs.skip != 'true'
+        if: steps.guard.outputs.skip != 'true'
         run: |
           bun install --frozen-lockfile
           bunx lefthook install
 
       - name: Install gitleaks
-        if: steps.dedup.outputs.skip != 'true'
+        if: steps.guard.outputs.skip != 'true'
         run: |
           curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz | tar xz -C /usr/local/bin gitleaks
 
       - name: Configure git
-        if: steps.dedup.outputs.skip != 'true'
+        if: steps.guard.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Post progress comment
-        if: steps.dedup.outputs.skip != 'true'
-        run: |
-          gh issue comment ${{ github.event.issue.number }} --body "🤖 **Skill chain started** — implementing this slice using TDD.
-
-          Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      - name: Clean up failed branch on retry
+        if: steps.guard.outputs.skip != 'true' && steps.guard.outputs.is_retry == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
+        run: |
+          BRANCH="slice/issue-${{ github.event.issue.number }}"
+
+          # Close any existing open PR for this branch
+          EXISTING_PR=$(gh pr list --repo "${{ github.repository }}" --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr close "$EXISTING_PR" --repo "${{ github.repository }}" --comment "Closing for retry (attempt ${{ steps.guard.outputs.attempt }})."
+          fi
+
+          # Delete remote branch if it exists
+          if git ls-remote --heads origin "$BRANCH" | grep -q .; then
+            git push origin --delete "$BRANCH" || true
+          fi
+
+      - name: Post progress comment
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+        run: |
+          ATTEMPT="${{ steps.guard.outputs.attempt }}"
+          if [ "$ATTEMPT" = "1" ]; then
+            BODY="🤖 **Attempt $ATTEMPT/3** — implementing this slice using TDD."
+          else
+            BODY="🤖 **Attempt $ATTEMPT/3** — retrying implementation (cleaning up previous branch and fixing issues)."
+          fi
+          gh issue comment ${{ github.event.issue.number }} --body "$BODY
+
+          Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
       - name: Implement slice using TDD
-        if: steps.dedup.outputs.skip != 'true'
+        if: steps.guard.outputs.skip != 'true' && steps.guard.outputs.is_retry != 'true'
         uses: anthropics/claude-code-action@v1
         with:
           allowed_bots: '*'
@@ -96,16 +150,64 @@ jobs:
             2. For each behavior: write a failing test (RED), write minimal code to pass (GREEN)
             3. Refactor after all tests pass
 
+            Before pushing, rebase on latest main:
+            git fetch origin main && git rebase origin/main
+
+            If the rebase has conflicts, resolve them, then continue.
+
+            Create a branch named slice/issue-${{ github.event.issue.number }}, commit, then open a PR:
+            gh pr create --title "Implement: ${{ github.event.issue.title }}" --body "Closes #${{ github.event.issue.number }}" --head slice/issue-${{ github.event.issue.number }} --base main
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+
+      - name: Retry — fix CI failures
+        if: steps.guard.outputs.skip != 'true' && steps.guard.outputs.is_retry == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          allowed_bots: '*'
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowedTools "Bash(gh:*),Bash(git:*),Bash(bun:*),Read,Write,Edit,Glob,Grep,WebSearch"'
+          show_full_output: true
+          prompt: |
+            This is retry attempt ${{ steps.guard.outputs.attempt }}/3 for issue #${{ github.event.issue.number }}.
+
+            Fetch the issue and its comments to understand what was attempted before:
+            gh issue view ${{ github.event.issue.number }} --comments
+
+            The previous attempt failed. Start fresh from main:
+            1. Read the issue requirements
+            2. Implement the slice using TDD (RED → GREEN → refactor)
+            3. Run the full check suite: bun run check
+            4. Fix any failures before committing
+
+            Before pushing, rebase on latest main:
+            git fetch origin main && git rebase origin/main
+
             Create a branch named slice/issue-${{ github.event.issue.number }}, commit, then open a PR:
             gh pr create --title "Implement: ${{ github.event.issue.title }}" --body "Closes #${{ github.event.issue.number }}" --head slice/issue-${{ github.event.issue.number }} --base main
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 
       - name: Report failure
-        if: failure() && steps.dedup.outputs.skip != 'true'
-        run: |
-          gh issue comment ${{ github.event.issue.number }} --body "❌ **Skill chain failed** (Slice → Implementation)
-
-          Workflow logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        if: failure() && steps.guard.outputs.skip != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
+          ATTEMPT: ${{ steps.guard.outputs.attempt }}
+        run: |
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          REPO="${{ github.repository }}"
+
+          if [ "$ATTEMPT" -ge "3" ]; then
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPO" --body "❌ **Attempt $ATTEMPT/3 failed** — max retries exhausted. Leaving branch and PR for human review.
+
+          Workflow logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          else
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPO" --body "❌ **Attempt $ATTEMPT/3 failed** — will retry automatically.
+
+          Workflow logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+            # Trigger retry by removing and re-adding the slice label
+            gh issue edit "$ISSUE_NUMBER" --repo "$REPO" --remove-label slice
+            sleep 2
+            gh issue edit "$ISSUE_NUMBER" --repo "$REPO" --add-label slice
+          fi

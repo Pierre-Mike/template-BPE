@@ -72,10 +72,10 @@
     {
       "type": "text",
       "id": "slice",
-      "x": -220,
+      "x": -300,
       "y": 560,
-      "width": 260,
-      "height": 100,
+      "width": 340,
+      "height": 140,
       "color": "6",
       "text": "## Slice (ready)\n`label: slice`\n\nNo blockers — ready to implement"
     },
@@ -83,69 +83,89 @@
       "type": "text",
       "id": "slice-pending",
       "x": 260,
-      "y": 540,
-      "width": 260,
-      "height": 100,
+      "y": 560,
+      "width": 420,
+      "height": 140,
       "color": "5",
       "text": "## Slice (blocked)\n`label: slice-pending`\n\nWaiting on other slices"
     },
     {
       "type": "text",
       "id": "slice-dedup",
-      "x": -220,
-      "y": 720,
-      "width": 260,
-      "height": 80,
+      "x": -380,
+      "y": 760,
+      "width": 420,
+      "height": 120,
       "color": "3",
-      "text": "### Idempotency Guard\nPR or branch already exists?\n**Yes → skip** | No → continue"
+      "text": "### Attempt Guard\nCount `🤖 **Attempt` comments on issue\n**≥ 3 → give up** | Merged PR → skip\nOtherwise → attempt N+1"
     },
     {
       "type": "text",
       "id": "on-slice",
-      "x": -220,
-      "y": 860,
-      "width": 260,
-      "height": 120,
+      "x": -360,
+      "y": 980,
+      "width": 400,
+      "height": 180,
       "color": "4",
-      "text": "## `on-slice.yml`\n`trigger: opened, labeled`\n\nClaude implements via TDD\nCreates branch + PR"
+      "text": "## `on-slice.yml`\n`trigger: opened, labeled`\n\n**Attempt 1:** Implement via TDD + rebase on main\n**Retry 2-3:** Clean up old branch, re-implement\nCreates branch + PR"
+    },
+    {
+      "type": "text",
+      "id": "retry",
+      "x": -760,
+      "y": 980,
+      "width": 300,
+      "height": 120,
+      "color": "1",
+      "text": "### Retry Loop\nOn failure: remove `slice` label\nWait 2s, re-add `slice` label\nTriggers `on-slice.yml` again"
+    },
+    {
+      "type": "text",
+      "id": "give-up",
+      "x": -760,
+      "y": 1140,
+      "width": 300,
+      "height": 100,
+      "color": "1",
+      "text": "### Max Retries (3)\nLeave branch + PR as wreckage\nComment: needs human intervention"
     },
     {
       "type": "text",
       "id": "pr",
-      "x": -220,
-      "y": 1040,
-      "width": 260,
-      "height": 80,
+      "x": -340,
+      "y": 1200,
+      "width": 380,
+      "height": 140,
       "color": "2",
       "text": "## Pull Request\n`Closes #N`\n\nCI runs, human reviews"
     },
     {
       "type": "text",
       "id": "merge",
-      "x": -220,
-      "y": 1180,
-      "width": 260,
-      "height": 80,
+      "x": -320,
+      "y": 1420,
+      "width": 360,
+      "height": 100,
       "color": "2",
       "text": "## Human Merges PR\nIssue auto-closed via `Closes #N`"
     },
     {
       "type": "text",
       "id": "on-closed",
-      "x": 260,
-      "y": 810,
-      "width": 260,
-      "height": 140,
+      "x": 180,
+      "y": 1000,
+      "width": 600,
+      "height": 172,
       "color": "4",
       "text": "## `on-slice-closed.yml`\n`trigger: closed`\n\nScans ALL `slice-pending` issues\nChecks if their blockers are closed\nPromotes unblocked → `slice`"
     },
     {
       "type": "text",
       "id": "loop-note",
-      "x": 260,
-      "y": 690,
-      "width": 260,
-      "height": 80,
+      "x": 220,
+      "y": 800,
+      "width": 440,
+      "height": 120,
       "color": "5",
       "text": "### Promotion\n`slice-pending` → `slice`\ntriggers `on-slice.yml` (labeled)"
     }
@@ -229,7 +249,7 @@
       "toNode": "on-slice",
       "toSide": "top",
       "toEnd": "arrow",
-      "label": "no PR yet"
+      "label": "attempts < 3"
     },
     {
       "id": "e-impl-pr",
@@ -275,6 +295,33 @@
       "toSide": "right",
       "toEnd": "arrow",
       "label": "label → slice"
+    },
+    {
+      "id": "e-fail-retry",
+      "fromNode": "on-slice",
+      "fromSide": "left",
+      "toNode": "retry",
+      "toSide": "right",
+      "toEnd": "arrow",
+      "label": "failure (attempt < 3)"
+    },
+    {
+      "id": "e-retry-slice",
+      "fromNode": "retry",
+      "fromSide": "top",
+      "toNode": "slice",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "re-add slice label"
+    },
+    {
+      "id": "e-fail-giveup",
+      "fromNode": "on-slice",
+      "fromSide": "left",
+      "toNode": "give-up",
+      "toSide": "right",
+      "toEnd": "arrow",
+      "label": "failure (attempt = 3)"
     }
   ]
 }
