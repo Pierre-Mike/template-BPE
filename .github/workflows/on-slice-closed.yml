@@ -14,41 +14,47 @@ jobs:
     if: contains(github.event.issue.labels.*.name, 'slice')
 
     steps:
-      - name: Unblock dependent slices
+      - name: Promote unblocked slice-pending issues
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLOSED_NUMBER: ${{ github.event.issue.number }}
         run: |
           REPO="${{ github.repository }}"
 
-          # Read the closed issue body and parse "**Unblocks:** #X, #Y"
-          BODY=$(gh issue view "$CLOSED_NUMBER" --repo "$REPO" --json body -q .body)
-          UNBLOCKS_LINE=$(echo "$BODY" | grep -oP '(?<=\*\*Unblocks:\*\* ).*' || true)
+          # Find all open issues with the slice-pending label
+          PENDING=$(gh issue list --repo "$REPO" --label slice-pending --state open --json number --jq '.[].number')
 
-          if [ -z "$UNBLOCKS_LINE" ]; then
-            echo "No unblocks field — nothing to do."
+          if [ -z "$PENDING" ]; then
+            echo "No slice-pending issues — nothing to do."
             exit 0
           fi
 
-          # Extract issue numbers from the unblocks line
-          CANDIDATES=$(echo "$UNBLOCKS_LINE" | grep -oP '\d+')
-
-          for CANDIDATE in $CANDIDATES; do
+          for CANDIDATE in $PENDING; do
             echo "Checking slice-pending #$CANDIDATE..."
 
-            # Skip if it doesn't have the slice-pending label
-            LABELS=$(gh issue view "$CANDIDATE" --repo "$REPO" --json labels -q '.labels[].name' 2>/dev/null || true)
-            if ! echo "$LABELS" | grep -q "slice-pending"; then
-              echo "#$CANDIDATE is not slice-pending — skipping."
+            # Extract blocker issue numbers from the body
+            # Supports both "**Blocked by:** #X, #Y" and "## Blocked by\n- #X\n- #Y" formats
+            CANDIDATE_BODY=$(gh issue view "$CANDIDATE" --repo "$REPO" --json body -q .body)
+            BLOCKERS=$(echo "$CANDIDATE_BODY" | grep -oE '#[0-9]+' | grep -oE '[0-9]+' | sort -u)
+
+            if [ -z "$BLOCKERS" ]; then
+              echo "  No blockers found in body — skipping (may need manual review)."
               continue
             fi
 
-            # Parse "**Blocked by:** #X, #Y" from the candidate's body
-            CANDIDATE_BODY=$(gh issue view "$CANDIDATE" --repo "$REPO" --json body -q .body)
-            BLOCKERS=$(echo "$CANDIDATE_BODY" | grep -oP '(?<=\*\*Blocked by:\*\* ).*' | grep -oP '\d+' || true)
-
             ALL_CLOSED=true
             for BLOCKER in $BLOCKERS; do
+              # Skip self-references and non-slice issues
+              if [ "$BLOCKER" = "$CANDIDATE" ]; then
+                continue
+              fi
+
+              # Only check issues that have slice or slice-pending labels
+              LABELS=$(gh issue view "$BLOCKER" --repo "$REPO" --json labels --jq '.labels[].name' 2>/dev/null || true)
+              if ! echo "$LABELS" | grep -qE '^(slice|slice-pending)$'; then
+                continue
+              fi
+
               STATE=$(gh issue view "$BLOCKER" --repo "$REPO" --json state -q .state 2>/dev/null || echo "OPEN")
               if [ "$STATE" != "CLOSED" ]; then
                 echo "  Blocker #$BLOCKER is still open — #$CANDIDATE stays pending."
