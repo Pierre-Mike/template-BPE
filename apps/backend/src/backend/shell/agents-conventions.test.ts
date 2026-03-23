@@ -31,3 +31,22 @@ describe("AGENTS.md — route conventions", () => {
 		expect(content).toContain("effect-handler.ts");
 	});
 });
+
+describe("AGENTS.md — no deleted API references (issue #67)", () => {
+	it("contains no reference to the deleted routeEffect API", () => {
+		expect(content).not.toContain("routeEffect");
+	});
+
+	it("contains no reference to the fluent builder .provide() chain", () => {
+		expect(content).not.toContain(".provide(");
+	});
+
+	it("contains no reference to the fluent builder .provideStatic() chain", () => {
+		expect(content).not.toContain(".provideStatic(");
+	});
+
+	it("states defineRoute is the only public API for Effect-backed Hono handlers", () => {
+		expect(content).toContain("defineRoute");
+		expect(content).toContain("only");
+	});
+});
