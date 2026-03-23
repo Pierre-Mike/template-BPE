@@ -81,3 +81,60 @@ Each stage blocks the next. No `--force` merges.
 ## Protected Files (Human Review Required)
 
 > **Dev mode**: Protected file restrictions are currently relaxed. AI agents may modify all files directly.
+
+## Route Authoring Conventions
+
+### Route file location
+
+Each route lives in its own file: `shell/routes/<name>.ts` — one file per route group.
+
+### RouteModule export shape
+
+Every route file must export a named object satisfying `RouteModule`:
+
+```ts
+export const fooRoute = { app, testApp } satisfies RouteModule<typeof app>;
+```
+
+- `app` — production Hono app wired with real layers (e.g. `makeConfigLayer(c.env)`)
+- `testApp` — identical routes wired with test layers (e.g. `ServiceTest`)
+
+The `{ app, testApp }` shape is enforced at compile time by the `RouteModule<TApp>` type.
+
+### Handler factory: `defineRoute` vs `routeEffect`
+
+| Scenario | Use |
+|---|---|
+| Single-dependency route, or no dependencies | `defineRoute({ deps, handler })` |
+| Multi-dependency or multi-step layer composition | `routeEffect<R, E>().provide(...).provideStatic(...).handle(fn)` builder |
+
+`defineRoute` is a convenience wrapper around `routeEffect`. Prefer it for the common case; reach for `routeEffect` when you need to chain multiple `.provide()` / `.provideStatic()` calls or set a custom `.onError()` strategy.
+
+### `api.ts` registry rule
+
+`shell/api.ts` is a **thin registry** — it may only contain:
+- `import` statements for route modules
+- `.route()` mount calls on the root Hono app
+- The `AppType` export
+
+No handler logic, no `Effect.gen`, no service calls are allowed in `api.ts`.
+
+### Test rule
+
+Every route file (`shell/routes/<name>.ts`) must have a co-located `<name>.test.ts`.
+Tests must import and exercise `testApp`, **not** the production `app` or `api.ts`:
+
+```ts
+// ✅ correct
+const res = await fooRoute.testApp.request("/foo");
+
+// ❌ wrong — bypasses isolated test layers
+import app from "../api.ts";
+```
+
+### `effect-handler.ts` boundary rule
+
+`shell/effect-handler.ts` is pure infrastructure glue (Effect runtime adapter).
+It **must not** import from `core/` or `infra/` — enforced by dependency-cruiser in CI.
+
+Violation: adding `import ... from '../core/...'` inside `effect-handler.ts` will fail the `lint:deps` check.
