@@ -1,4 +1,3 @@
-import type { ParseError } from "@effect/schema/ParseResult";
 import { Effect } from "effect";
 import type { Context } from "hono";
 import { Hono } from "hono";
@@ -17,7 +16,7 @@ const versionHandler = (c: Context<{ Bindings: WorkerBindings }>) =>
 
 const app = new Hono<{ Bindings: WorkerBindings }>().get(
 	"/version",
-	defineRoute<ConfigService, ParseError>({
+	defineRoute({
 		deps: (c) => makeConfigLayer(c.env),
 		handler: versionHandler,
 	}),
@@ -25,7 +24,7 @@ const app = new Hono<{ Bindings: WorkerBindings }>().get(
 
 const testApp = new Hono<{ Bindings: WorkerBindings }>().get(
 	"/version",
-	defineRoute<ConfigService, ParseError>({
+	defineRoute({
 		deps: ConfigTest,
 		handler: versionHandler,
 	}),
