@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Promote unblocked slice-pending issues
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
           CLOSED_NUMBER: ${{ github.event.issue.number }}
         run: |
           REPO="${{ github.repository }}"
