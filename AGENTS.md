@@ -101,14 +101,9 @@ export const fooRoute = { app, testApp } satisfies RouteModule<typeof app>;
 
 The `{ app, testApp }` shape is enforced at compile time by the `RouteModule<TApp>` type.
 
-### Handler factory: `defineRoute` vs `routeEffect`
+### Handler factory: `defineRoute`
 
-| Scenario | Use |
-|---|---|
-| Single-dependency route, or no dependencies | `defineRoute({ deps, handler })` |
-| Multi-dependency or multi-step layer composition | `routeEffect<R, E>().provide(...).provideStatic(...).handle(fn)` builder |
-
-`defineRoute` is a convenience wrapper around `routeEffect`. Prefer it for the common case; reach for `routeEffect` when you need to chain multiple `.provide()` / `.provideStatic()` calls or set a custom `.onError()` strategy.
+Use `defineRoute({ deps, handler })` for all routes. It accepts a single optional `deps` layer (factory or static) and an optional `onError` mapper.
 
 ### `api.ts` registry rule
 
