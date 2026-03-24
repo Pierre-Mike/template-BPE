@@ -34,3 +34,15 @@ database_id = "00000000-0000-0000-0000-000000000000"
 # [vars]
 # ENVIRONMENT = "production"  # Example: runtime environment label
 # LOG_LEVEL = "info"          # Example: logging verbosity
+
+# ---------------------------------------------------------------------------
+# ENVIRONMENT SEPARATION
+# Use `wrangler deploy --env staging` or `wrangler deploy --env production`
+# to target a specific environment. Each env block overrides the root config.
+# ---------------------------------------------------------------------------
+
+[env.staging]
+name = "template-bpe-backend-staging"
+
+[env.production]
+name = "template-bpe-backend-production"
