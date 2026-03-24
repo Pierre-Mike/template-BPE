@@ -14,6 +14,25 @@
 		},
 		"test": {
 			"dependsOn": ["^build"]
+		},
+		"//#lint:ci": {
+			"inputs": ["apps/**/*.{ts,js,json,astro}", "packages/**/*.{ts,js,json}", "biome.json"]
+		},
+		"//#colocated-tests": {
+			"inputs": ["apps/**/*.test.ts", "apps/**/*.ts", "packages/**/*.test.ts", "packages/**/*.ts"]
+		},
+		"//#secret-scan": {
+			"cache": false
+		},
+		"check": {
+			"dependsOn": [
+				"typecheck",
+				"test",
+				"//#lint:ci",
+				"//#colocated-tests",
+				"//#secret-scan",
+				"build"
+			]
 		}
 	}
 }
