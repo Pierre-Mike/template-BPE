@@ -51,18 +51,18 @@ describe("GitHub Actions secrets for Cloudflare deployment", () => {
 describe("CI pipeline — protects against credential leaks in git history", () => {
 	const ciPath = new URL("../../../../.github/workflows/ci.yml", import.meta.url);
 
-	it("ci.yml has a gitleaks secret-scan job", async () => {
+	it("ci.yml installs gitleaks for secret scanning", async () => {
 		const source = await Bun.file(ciPath).text();
 		expect(source).toContain("gitleaks");
 	});
 
-	it("secret-scan job fetches full git history (fetch-depth: 0)", async () => {
+	it("check job fetches full git history (fetch-depth: 0)", async () => {
 		const source = await Bun.file(ciPath).text();
 		expect(source).toContain("fetch-depth: 0");
 	});
 
-	it("gitleaks job authenticates via GITHUB_TOKEN — no hardcoded credentials", async () => {
+	it("ci.yml runs turbo check as the single gate", async () => {
 		const source = await Bun.file(ciPath).text();
-		expect(source).toContain("secrets.GITHUB_TOKEN");
+		expect(source).toContain("turbo check");
 	});
 });
