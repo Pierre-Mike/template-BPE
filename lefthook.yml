@@ -19,3 +19,11 @@ pre-commit:
 
     secret-scan:
       run: gitleaks protect --staged --no-banner
+
+pre-push:
+  commands:
+    test:
+      run: bunx turbo test
+
+    build:
+      run: bunx turbo build
