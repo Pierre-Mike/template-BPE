@@ -3,13 +3,11 @@ compatibility_date = "2025-03-17"
 
 # ---------------------------------------------------------------------------
 # ENVIRONMENT VARIABLES
-# PUBLIC_API_URL points to the deployed backend Worker so that Astro SSR pages
-# call the real backend on Cloudflare Pages instead of falling back to
-# http://localhost:8787. Override per environment using [env.<name>.vars].
-# Local development leaves PUBLIC_API_URL unset and relies on the fallback.
+# PUBLIC_API_URL is set per environment only (staging/production).
+# Local development leaves it unset — pages fall back to http://localhost:8788.
+# Do NOT set PUBLIC_API_URL in root [vars] — it breaks `astro dev` by routing
+# SSR requests to the production backend instead of the local wrangler server.
 # ---------------------------------------------------------------------------
-[vars]
-PUBLIC_API_URL = "https://template-bpe-backend.workers.dev"
 
 [assets]
 directory = "dist/client"

@@ -33,6 +33,16 @@ lefthook.yml          # Git hooks
 - **Shell:** Hono routes + `Effect.gen` coordinators: impure(read) → pure(compute) → impure(write)
 - `Effect.runPromise` calls restricted to `shell/` and `main.ts`
 
+### Core purity rules
+
+- **No side effects in `core/`** — no `new Date()`, no `crypto.randomUUID()`, no `Math.random()`. Pass timestamps, IDs, and random values as parameters. Generate them in `shell/` or `infra/`.
+- **Validate in one layer only** — validation logic lives in `core/` and is called from `infra/` or `shell/`. Never duplicate validation across layers.
+- **No `as` type casts in non-test files** — use `Schema.decode`, brand constructors, or proper type narrowing instead of `as Foo` assertions.
+
+### Infra rules
+
+- **Shared D1 types** — import `D1Database` and `D1PreparedStatement` from `infra/d1-types.ts`. Do not redefine these interfaces in each repository file.
+
 ## Hono RPC (End-to-End Type Safety)
 
 - Backend exports `AppType` from `shell/api.ts` via `"exports": { "./types" }` in package.json
@@ -63,6 +73,10 @@ lefthook.yml          # Git hooks
 - **No `any`** — `noExplicitAny: error` in Biome
 - **No empty catch blocks** — must log or rethrow
 - **No console.log** — use structured logger
+
+## Frontend conventions
+
+- **API URL resolution** — Astro pages use `import { env } from "cloudflare:workers"` to get `PUBLIC_API_URL`, with a fallback to `http://localhost:8787` for local dev. The `PUBLIC_API_URL` var is only set in per-environment wrangler.toml blocks (`[env.staging.vars]`, `[env.production.vars]`), never in root `[vars]` — setting it at root breaks `astro dev` by routing to the production backend.
 
 ## Pre-commit Hooks (Lefthook)
 

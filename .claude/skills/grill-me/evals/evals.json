@@ -1,0 +1,130 @@
+{
+	"skill_name": "grill-me",
+	"evals": [
+		{
+			"id": "todo-app",
+			"prompt": "Grill me on this plan: I want to build a todo app with a React frontend and a REST API backend.",
+			"expectations": [
+				"Asks questions rather than making statements or providing answers",
+				"Covers multiple decision branches — not just technology choices but also scope, users, or deployment",
+				"Asks about data persistence or storage approach",
+				"Asks about authentication or who the users are",
+				"Does not make implementation decisions for the user or recommend a specific stack unprompted"
+			]
+		},
+		{
+			"id": "caching-layer",
+			"prompt": "Grill me on this plan: We're going to add a Redis caching layer in front of our main PostgreSQL database to improve performance.",
+			"expectations": [
+				"Asks questions rather than endorsing or rejecting the approach",
+				"Asks about cache invalidation strategy or TTL decisions",
+				"Asks about what data will be cached and why those queries are slow",
+				"Asks about consistency requirements or acceptable staleness",
+				"Covers operational concerns — monitoring, cache warming, fallback behavior, or failure modes"
+			]
+		},
+		{
+			"id": "api-versioning",
+			"prompt": "Grill me on this plan: We're going to version our API using URL path versioning like /v1/, /v2/ going forward.",
+			"expectations": [
+				"Asks questions rather than approving or rejecting the versioning strategy",
+				"Asks about existing clients or how breaking changes will be communicated",
+				"Asks about deprecation policy — how long old versions are supported",
+				"Covers more than just the URL scheme — asks about what triggers a version bump or how divergence between versions is managed",
+				"Does not lecture about REST versioning best practices without being asked"
+			]
+		},
+		{
+			"id": "microservices-migration",
+			"prompt": "Grill me on this plan: We want to migrate our monolith to microservices over the next 6 months.",
+			"expectations": [
+				"Asks questions rather than validating or dismissing the migration plan",
+				"Asks about the motivation or specific pain point driving the migration",
+				"Asks about team structure — who owns each service, how many engineers are involved",
+				"Asks about data ownership or how shared databases will be handled",
+				"Covers deployment and operational concerns — service discovery, distributed tracing, or rollback strategy"
+			]
+		},
+		{
+			"id": "auth-replacement",
+			"prompt": "Grill me on this plan: We're replacing our homegrown session-based auth with Auth0 for all our apps.",
+			"expectations": [
+				"Asks questions rather than endorsing or warning against the decision",
+				"Asks about the migration path for existing users or active sessions",
+				"Asks about which apps are in scope and whether they share the same user base",
+				"Covers risk and rollback — what happens if Auth0 is unavailable or the migration goes wrong",
+				"Does not assume the decision is final — probes whether alternatives were considered"
+			]
+		},
+		{
+			"id": "database-sharding",
+			"prompt": "Grill me on this plan: We're going to shard our user database by user ID to handle our growing dataset.",
+			"expectations": [
+				"Asks questions rather than endorsing or warning against sharding",
+				"Asks about the actual scale problem — current data size, query patterns, or what is actually slow",
+				"Asks about cross-shard queries or operations that span multiple users",
+				"Asks about the sharding key choice and whether user ID distribution is uniform",
+				"Covers operational overhead — re-sharding, hotspots, or whether simpler alternatives were considered"
+			]
+		},
+		{
+			"id": "new-hire-onboarding",
+			"prompt": "Grill me on this plan: We want to redesign our new hire onboarding process. The plan is a 30-day structured program with weekly check-ins.",
+			"expectations": [
+				"Asks questions rather than endorsing the 30-day structure",
+				"Asks about the specific problems with the current onboarding — what prompted this redesign",
+				"Asks about who owns the program and who runs the weekly check-ins",
+				"Covers success metrics — how will the team know if the new process is better",
+				"Asks at least one question about edge cases or roles — whether all new hires follow the same program regardless of role or seniority"
+			]
+		},
+		{
+			"id": "feature-flag-build-vs-buy",
+			"prompt": "I want to implement a feature flag system in-house instead of using LaunchDarkly or Split. The plan: store flags in a Redis hash, read them on each request with a thin SDK wrapper, and use our existing admin panel to toggle flags. We have about 30 engineers and 15 services. Grill me on this.",
+			"expected_output": "A relentless interrogation covering build-vs-buy reasoning, failure modes, missing capabilities, and operational readiness — framed as questions, not analysis.",
+			"expectations": [
+				"At least one question directly probes why building in-house is preferred — asking about cost, missing features in commercial tools, or what was evaluated and rejected",
+				"At least one question asks about a failure scenario: Redis downtime, stale flags, fallback defaults, or bad flag rollout detection",
+				"At least one question probes capabilities the plan omits: user targeting, percentage rollouts, audit logging, or gradual rollout strategies",
+				"The response is predominantly questions. It does not include extended multi-sentence analysis, explanations, or answers to its own questions after posing them. Brief framing is acceptable but the majority of content must be questions awaiting the user's input.",
+				"The response does not include a summary judgment, bottom-line evaluation, or prescriptive conclusion section that evaluates the plan or tells the user what to do next."
+			]
+		},
+		{
+			"id": "cicd-migration-jenkins-to-gha",
+			"prompt": "We're migrating our CI/CD from Jenkins to GitHub Actions. Plan: rewrite all 40 Jenkinsfiles as GHA workflows over 3 months, run both in parallel during migration, then decommission Jenkins. We have a platform team of 3 who will do all the rewrites. Grill me.",
+			"expected_output": "Deep interrogation covering migration sequencing, team capacity realism, verification parity, and operational concerns — all as questions, no checklists or advice.",
+			"expectations": [
+				"At least one question asks how the 40 pipelines will be prioritized, sequenced, or categorized for migration — not just 'will you migrate them all at once'",
+				"At least one question probes whether 3 engineers can realistically handle 40 pipelines in 3 months, or how other responsibilities are handled during this period",
+				"At least one question asks how the team will verify that new GHA workflows produce equivalent results to Jenkins pipelines during parallel run",
+				"The response does not contain imperative recommendations ('you should', 'make sure to', 'I recommend', 'consider using'). All concerns are framed as questions, not advice.",
+				"Questions do not immediately answer themselves. A question like 'Have you done the math? That's 13 per person, which sounds fine until...' fails because it provides the analysis. Questions should wait for the user's response."
+			]
+		},
+		{
+			"id": "vague-input-deployment",
+			"prompt": "We're going to improve our deployment process.",
+			"expected_output": "Refuses to accept the vagueness. Fires back with probing questions across multiple dimensions, without endorsing the goal or promising solutions.",
+			"expectations": [
+				"At least one question asks about what the current deployment process looks like today",
+				"At least one question probes what 'improve' means — what's broken, what the pain points are, or what success looks like",
+				"The response does not endorse or encourage the goal with phrases like 'worthwhile', 'great idea', 'sounds good', or 'happy to help'",
+				"At least one question probes what triggered this — was there an incident, a complaint, a scaling problem, or an external pressure that prompted this now",
+				"The response does not promise to provide suggestions, solutions, or recommendations. It stays in interrogation mode."
+			]
+		},
+		{
+			"id": "non-technical-bakery-expansion",
+			"prompt": "I'm opening a second location for my bakery. The first one has been profitable for 3 years. I'm planning to hire a manager for the new location, replicate the same menu, and take out a small business loan to cover the buildout. The new location is in a neighborhood about 20 minutes away that has a lot of foot traffic. Grill me on this.",
+			"expected_output": "Probing questions about staffing risk, financial exposure, market fit, operational complexity — specific to the bakery details given, with no congratulations or generic advice.",
+			"expectations": [
+				"At least one question asks about financial risk — loan terms, what happens if the second location underperforms, break-even timeline, or impact on the first location",
+				"At least one question asks about how operations will work across two locations — quality consistency, supply chain, the owner's time split, or management oversight",
+				"The response does not congratulate the user, call the plan 'exciting', 'great', or 'a good idea', or otherwise endorse the decision before probing it",
+				"The response is predominantly questions. It does not include extended analysis like 'Bakeries are notoriously thin — 5-10% net is common' or provide answers alongside questions. Questions should wait for the user's input.",
+				"Questions do not telegraph the expected answer. 'What are your actual margins?' is open-ended. 'What are your actual margins? Because bakeries are notoriously thin at 5-10%' is not — it answers itself."
+			]
+		}
+	]
+}

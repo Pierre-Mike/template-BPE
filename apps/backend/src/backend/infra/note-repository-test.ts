@@ -9,7 +9,7 @@ export const makeTestNoteRepository = (): Layer.Layer<NoteRepository> =>
 		return {
 			create: (input) =>
 				Effect.gen(function* () {
-					const note = yield* createNote(input);
+					const note = yield* createNote({ ...input, now: new Date() });
 					store.set(note.id, note);
 					return note;
 				}),

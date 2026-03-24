@@ -1,0 +1,169 @@
+{
+	"final_evals": {
+		"skill_name": "grill-me",
+		"evals": [
+			{
+				"id": "feature-flag-build-vs-buy",
+				"prompt": "I want to implement a feature flag system in-house instead of using LaunchDarkly or Split. The plan: store flags in a Redis hash, read them on each request with a thin SDK wrapper, and use our existing admin panel to toggle flags. We have about 30 engineers and 15 services. Grill me on this.",
+				"expected_output": "A relentless interrogation covering build-vs-buy reasoning, failure modes (Redis downtime, stale flags), missing capabilities (targeting, percentage rollouts, audit trails), SDK distribution across 15 services, and operational readiness. All framed as questions with no recommendations. At least 8 distinct questions.",
+				"files": [],
+				"assertions": [
+					{
+						"name": "probes-build-vs-buy-rationale",
+						"criteria": "At least one question directly probes why building in-house is preferred over existing solutions — asking about cost, specific missing features in commercial tools, or what was evaluated and rejected. Not just mentioning alternatives in passing."
+					},
+					{
+						"name": "asks-about-failure-mode",
+						"criteria": "At least one question asks about a failure scenario: what happens when Redis goes down, how stale flags are handled, whether there's a fallback default, or how a bad flag rollout is detected and reversed."
+					},
+					{
+						"name": "probes-missing-capabilities",
+						"criteria": "At least one question probes capabilities the plan doesn't mention but a production flag system needs: user/segment targeting, percentage rollouts, audit logging, flag dependencies, or gradual rollout strategies."
+					},
+					{
+						"name": "asks-at-least-eight-questions",
+						"criteria": "The response contains at least 8 distinct questions (sentences ending in '?'). The skill must be relentless and not stop after a few surface-level queries."
+					}
+				]
+			},
+			{
+				"id": "cicd-migration-jenkins-to-gha",
+				"prompt": "We're migrating our CI/CD from Jenkins to GitHub Actions. Plan: rewrite all 40 Jenkinsfiles as GHA workflows over 3 months, run both in parallel during migration, then decommission Jenkins. We have a platform team of 3 who will do all the rewrites. Grill me.",
+				"expected_output": "Deep interrogation covering migration sequencing and prioritization, parallel-run verification strategy, team capacity vs timeline realism, rollback plan if GHA doesn't work for certain pipelines, impact on developers during transition, and Jenkins-specific concerns (plugins, shared libraries). All as questions with no advice or recommendations. At least 4 distinct topic branches.",
+				"files": [],
+				"assertions": [
+					{
+						"name": "questions-about-migration-sequencing",
+						"criteria": "At least one question asks about how the 40 pipelines will be prioritized or sequenced for migration — probing the ordering strategy, dependencies between pipelines, or risk tiers. Not just 'will you migrate them all at once'."
+					},
+					{
+						"name": "questions-about-team-capacity",
+						"criteria": "At least one question probes whether 3 platform engineers can realistically rewrite 40 pipelines in 3 months, or how their other responsibilities are handled during this period."
+					},
+					{
+						"name": "questions-about-verification-parity",
+						"criteria": "At least one question asks how the team will verify that the new GHA workflows produce the same results as the Jenkins pipelines — how parity or correctness is validated during the parallel-run phase."
+					},
+					{
+						"name": "no-advice-or-recommendations",
+						"criteria": "The response does not contain imperative recommendations ('you should', 'make sure to', 'I recommend', 'consider using', 'a good practice is'). All concerns are framed as questions."
+					},
+					{
+						"name": "covers-at-least-four-distinct-branches",
+						"criteria": "The response addresses at least 4 clearly distinct topic areas (e.g., migration strategy, team capacity, verification approach, rollback plan, developer experience, Jenkins-specific concerns, cost, timeline). Count distinct thematic clusters — there must be at least 4."
+					}
+				]
+			},
+			{
+				"id": "vague-input-deployment",
+				"prompt": "We're going to improve our deployment process.",
+				"expected_output": "The response refuses to accept the vagueness and fires back with many probing questions: What's the current process? What's broken? How often do you deploy? What does 'improve' mean? Who's involved? What's the stack? What goes wrong? The response should generate at least 5 questions across at least 3 distinct topic areas, all interrogative with no tool recommendations.",
+				"files": [],
+				"assertions": [
+					{
+						"name": "asks-what-current-process-is",
+						"criteria": "The response asks at least one question about what the current deployment process looks like today, before probing how to improve it."
+					},
+					{
+						"name": "asks-what-improve-means",
+						"criteria": "The response asks at least one question that probes what 'improve' means — what's wrong today, what the goal state looks like, what pain points exist, or what success looks like."
+					},
+					{
+						"name": "covers-multiple-branches",
+						"criteria": "The response asks questions across at least 3 distinct topics (e.g., current state, pain points, team/process, tooling, rollback/risk, frequency, environments)."
+					},
+					{
+						"name": "does-not-suggest-tools-or-solutions",
+						"criteria": "The response does not recommend specific tools (e.g., 'you should use GitHub Actions', 'consider ArgoCD', 'look into Terraform') or specific deployment strategies. All output is interrogative."
+					},
+					{
+						"name": "minimum-question-count",
+						"criteria": "The response contains at least 5 distinct questions (sentences ending in '?')."
+					}
+				]
+			},
+			{
+				"id": "non-technical-bakery-expansion",
+				"prompt": "I'm opening a second location for my bakery. The first one has been profitable for 3 years. I'm planning to hire a manager for the new location, replicate the same menu, and take out a small business loan to cover the buildout. The new location is in a neighborhood about 20 minutes away that has a lot of foot traffic. Grill me on this.",
+				"expected_output": "Probing questions across multiple branches: staffing and manager risk, financial exposure and loan terms, market fit of the new neighborhood, operational complexity of two locations, and exit strategy. Questions must be specific to the details given (second bakery, existing profitable location, manager hire, loan). No congratulations, no generic business advice, no endorsement.",
+				"files": [],
+				"assertions": [
+					{
+						"name": "no-generic-business-advice",
+						"criteria": "The response does not include generic business advice like 'make sure to have a business plan', 'location is key', or 'cash flow is important'. Questions must be specific to the details provided (second bakery location, existing profitable first location, manager hire, loan, foot traffic neighborhood)."
+					},
+					{
+						"name": "probes-financial-risk",
+						"criteria": "The response asks at least one question about financial risk — loan terms, what happens if the second location underperforms, impact on the first location's finances, or break-even timeline."
+					},
+					{
+						"name": "probes-operations-across-locations",
+						"criteria": "The response asks at least one question about how operations will work across two locations — quality consistency, supply chain, the owner's time split, or management oversight."
+					},
+					{
+						"name": "no-endorsement",
+						"criteria": "The response does not congratulate the user, call the plan 'exciting', say 'sounds like a great opportunity', or otherwise endorse the decision before probing it."
+					}
+				]
+			}
+		]
+	},
+	"filtering_report": {
+		"total_candidates": 8,
+		"killed": [
+			{
+				"prompt_summary": "PostgreSQL hash-based sharding with Citus (Optimist 1)",
+				"reason": "redundant",
+				"detail": "Topic overlaps with existing eval 'database-sharding'. The scenario (shard key selection, cross-shard queries, re-sharding) covers the same decision space."
+			},
+			{
+				"prompt_summary": "Django monolith to microservices with gRPC/K8s (Optimist 2)",
+				"reason": "redundant",
+				"detail": "Topic overlaps with existing eval 'microservices-migration'. Both test interrogation of monolith-to-microservices plans with team/data/deployment concerns."
+			},
+			{
+				"prompt_summary": "Rails monolith to microservices + Go language switch (Adversarial 1)",
+				"reason": "redundant",
+				"detail": "Topic overlaps with existing eval 'microservices-migration'. While the Go language switch adds a twist, the core scenario (monolith decomposition, service boundaries, team readiness) is the same territory. The neutrality assertions are well-covered by the CI/CD and bakery evals."
+			},
+			{
+				"prompt_summary": "Redis caching layer in front of PostgreSQL (Adversarial 4)",
+				"reason": "redundant",
+				"detail": "Topic overlaps with existing eval 'caching-layer'. The scenario (cache invalidation, TTL strategy, operational concerns) covers the same domain."
+			}
+		],
+		"coverage": {
+			"must_haves": {
+				"covered": [
+					"Asks questions rather than making statements (ci-cd: no-advice-or-recommendations, vague-deployment: does-not-suggest-tools, bakery: no-endorsement)",
+					"Covers at least 3 distinct decision branches (ci-cd: covers-at-least-four-distinct-branches, vague-deployment: covers-multiple-branches)",
+					"Asks about operational/risk concerns (feature-flag: asks-about-failure-mode, bakery: probes-financial-risk)",
+					"Questions specific to the plan presented (feature-flag: probes-build-vs-buy-rationale, bakery: no-generic-business-advice)",
+					"Surfaces non-obvious concerns (feature-flag: probes-missing-capabilities, ci-cd: questions-about-team-capacity, ci-cd: questions-about-verification-parity)"
+				],
+				"uncovered": []
+			},
+			"deal_breakers": {
+				"covered": [
+					"Making implementation decisions for the user (vague-deployment: does-not-suggest-tools-or-solutions)",
+					"Endorsing or rejecting the plan without probing first (bakery: no-endorsement)",
+					"Stopping after 1-2 surface questions (feature-flag: asks-at-least-eight-questions, vague-deployment: minimum-question-count)",
+					"Generic questions that could apply to any plan (bakery: no-generic-business-advice)",
+					"Lecturing about best practices instead of interrogating (ci-cd: no-advice-or-recommendations)"
+				],
+				"uncovered": []
+			},
+			"quality_dimensions": {
+				"covered": [
+					"Depth (ci-cd: questions-about-migration-sequencing, vague-deployment: asks-what-current-process-is)",
+					"Breadth (ci-cd: covers-at-least-four-distinct-branches, vague-deployment: covers-multiple-branches)",
+					"Neutrality (ci-cd: no-advice-or-recommendations, bakery: no-endorsement, vague-deployment: does-not-suggest-tools)",
+					"Design insight (feature-flag: probes-build-vs-buy-rationale, probes-missing-capabilities; bakery: probes-operations-across-locations)",
+					"Relentlessness (feature-flag: asks-at-least-eight-questions, vague-deployment: minimum-question-count)"
+				],
+				"uncovered": []
+			}
+		},
+		"selection_reasoning": "Selected 4 evals from 8 candidates after killing 4 for topic overlap with existing evals. The surviving set is maximally discriminating because: (1) feature-flag-build-vs-buy tests relentlessness (8+ questions) and design insight on a build-vs-buy decision where bare Claude strongly defaults to recommending the commercial product; (2) cicd-migration tests breadth (4+ branches) and the no-advice deal-breaker on a migration plan where bare Claude defaults to checklists; (3) vague-input-deployment is the hardest discriminator — bare Claude almost certainly fills in the blanks with CI/CD recommendations instead of interrogating the vagueness; (4) non-technical-bakery-expansion tests domain generalization and the endorsement deal-breaker, since bare Claude reliably opens with congratulations on business success. Together they cover all 5 quality dimensions, all 5 must-haves, and all 5 deal-breakers with zero redundancy against the existing 7 evals."
+	}
+}

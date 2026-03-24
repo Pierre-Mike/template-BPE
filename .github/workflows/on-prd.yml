@@ -82,6 +82,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Dispatch batch implementation
+        if: steps.dedup.outputs.skip != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+        run: |
+          gh api "repos/${{ github.repository }}/dispatches" \
+            --method POST \
+            -f event_type=implement-prd \
+            -f 'client_payload[prd_number]=${{ github.event.issue.number }}'
+
+          gh issue comment ${{ github.event.issue.number }} --body "🚀 **Slices created** — dispatched batch implementation.
+
+          Watch: ${{ github.server_url }}/${{ github.repository }}/actions"
+
       - name: Report failure
         if: failure() && steps.dedup.outputs.skip != 'true'
         run: |
