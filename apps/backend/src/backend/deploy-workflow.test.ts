@@ -75,3 +75,47 @@ describe("DEPLOY_WORKFLOW constants", () => {
 		expect(DEPLOY_WORKFLOW.YAML_TEMPLATE).toContain(`--env ${DEPLOY_WORKFLOW.STAGING_ENV}`);
 	});
 });
+
+describe("DEPLOY_WORKFLOW production constants", () => {
+	it("PRODUCTION_ENV is production", () => {
+		expect(DEPLOY_WORKFLOW.PRODUCTION_ENV).toBe("production");
+	});
+
+	it("PROD_YAML_TEMPLATE is a non-empty string (documents the production workflow)", () => {
+		expect(typeof DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE).toBe("string");
+		expect(DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE.length).toBeGreaterThan(0);
+	});
+
+	it("PROD_YAML_TEMPLATE supports workflow_dispatch trigger", () => {
+		expect(DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE).toContain("workflow_dispatch");
+	});
+
+	it("PROD_YAML_TEMPLATE supports v* tag push trigger", () => {
+		expect(DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE).toContain("tags:");
+		expect(DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE).toContain("v*");
+	});
+
+	it("PROD_YAML_TEMPLATE does NOT use workflow_run (not auto-triggered on every push)", () => {
+		expect(DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE).not.toContain("workflow_run");
+	});
+
+	it("PROD_YAML_TEMPLATE uses --env production for wrangler deploy", () => {
+		expect(DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE).toContain(`--env ${DEPLOY_WORKFLOW.PRODUCTION_ENV}`);
+	});
+
+	it("PROD_YAML_TEMPLATE deploys backend first (backend dir appears before frontend dir)", () => {
+		const backendIdx = DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE.indexOf(DEPLOY_WORKFLOW.BACKEND_DIR);
+		const frontendIdx = DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE.indexOf(DEPLOY_WORKFLOW.FRONTEND_DIR);
+		expect(backendIdx).toBeGreaterThan(-1);
+		expect(frontendIdx).toBeGreaterThan(-1);
+		expect(backendIdx).toBeLessThan(frontendIdx);
+	});
+
+	it("PROD_YAML_TEMPLATE references CLOUDFLARE_API_TOKEN secret", () => {
+		expect(DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE).toContain("secrets.CLOUDFLARE_API_TOKEN");
+	});
+
+	it("PROD_YAML_TEMPLATE references CLOUDFLARE_ACCOUNT_ID secret", () => {
+		expect(DEPLOY_WORKFLOW.PROD_YAML_TEMPLATE).toContain("secrets.CLOUDFLARE_ACCOUNT_ID");
+	});
+});
