@@ -1,6 +1,13 @@
 name = "template-bpe-frontend"
 compatibility_date = "2025-03-17"
 
+# ---------------------------------------------------------------------------
+# ENVIRONMENT VARIABLES
+# PUBLIC_API_URL points to the deployed backend Worker so that Astro SSR pages
+# call the real backend on Cloudflare Pages instead of falling back to
+# http://localhost:8787. Override per environment using [env.<name>.vars].
+# Local development leaves PUBLIC_API_URL unset and relies on the fallback.
+# ---------------------------------------------------------------------------
 [vars]
 PUBLIC_API_URL = "https://template-bpe-backend.workers.dev"
 
