@@ -1,12 +1,14 @@
-import { Effect } from "effect";
+import { Effect, type Layer } from "effect";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { getVersion } from "../../core/version.ts";
-import { ConfigService, ConfigTest, makeConfigLayer } from "../../infra/config.ts";
+import { ConfigService, makeConfigLayer } from "../../infra/config.ts";
 import { defineRoute, type WorkerBindings } from "../effect-handler.ts";
 import type { RouteModule } from "./_types.ts";
 
-const versionHandler = (c: Context<{ Bindings: WorkerBindings }>) =>
+type AnyContext = Context<{ Bindings: WorkerBindings }>;
+
+const versionHandler = (c: AnyContext) =>
 	Effect.gen(function* () {
 		const config = yield* ConfigService;
 		const raw = yield* config.get();
@@ -14,20 +16,14 @@ const versionHandler = (c: Context<{ Bindings: WorkerBindings }>) =>
 		return c.json(version, 200);
 	});
 
-const app = new Hono<{ Bindings: WorkerBindings }>().get(
-	"/version",
-	defineRoute({
-		deps: (c) => makeConfigLayer(c.env),
-		handler: versionHandler,
-	}),
-);
+export const buildVersionApp = (
+	deps: Layer.Layer<ConfigService> | ((c: AnyContext) => Layer.Layer<ConfigService>),
+) =>
+	new Hono<{ Bindings: WorkerBindings }>().get(
+		"/version",
+		defineRoute({ deps, handler: versionHandler }),
+	);
 
-const testApp = new Hono<{ Bindings: WorkerBindings }>().get(
-	"/version",
-	defineRoute({
-		deps: ConfigTest,
-		handler: versionHandler,
-	}),
-);
+const app = buildVersionApp((c) => makeConfigLayer(c.env));
 
-export const versionRoute = { app, testApp } satisfies RouteModule<typeof app>;
+export const versionRoute = { app } satisfies RouteModule<typeof app>;

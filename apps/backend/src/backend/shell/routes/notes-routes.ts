@@ -1,12 +1,8 @@
-import { Effect, Context as EffectContext, Layer } from "effect";
+import { Effect, type Layer } from "effect";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { NoteBodyTooLong, type NoteId, NoteNotFound, NoteTitleTooLong } from "../../core/note.ts";
-import {
-	makeNoteRepositoryLive,
-	NoteRepository,
-	NoteRepositoryTest,
-} from "../../infra/note-repository.ts";
+import { makeNoteRepositoryLive, NoteRepository } from "../../infra/note-repository.ts";
 import { defineRoute, type WorkerBindings } from "../effect-handler.ts";
 import type { RouteModule } from "./_types.ts";
 
@@ -97,7 +93,7 @@ const deleteNoteHandler = (c: AnyContext) =>
 // App factory (parameterised over the NoteRepository layer)
 // ---------------------------------------------------------------------------
 
-const buildApp = (
+export const buildNotesApp = (
 	deps: Layer.Layer<NoteRepository> | ((c: AnyContext) => Layer.Layer<NoteRepository>),
 ) =>
 	new Hono<{ Bindings: WorkerBindings }>()
@@ -137,27 +133,6 @@ const buildApp = (
 // ---------------------------------------------------------------------------
 // Live app — per-request D1-backed repository
 // ---------------------------------------------------------------------------
-const app = buildApp((c) => makeNoteRepositoryLive(c.env.DB));
+const app = buildNotesApp((c) => makeNoteRepositoryLive(c.env.DB));
 
-// ---------------------------------------------------------------------------
-// Test app — shares ONE in-memory store across all route handlers.
-//
-// NoteRepositoryTest is a Layer.sync, which allocates a new Map on every
-// Effect.provide call. To share state across requests (POST then GET, etc.)
-// we build the service value once and wrap it in Layer.succeed so every
-// request gets the same instance.
-// ---------------------------------------------------------------------------
-const _sharedTestService: NoteRepository = Effect.runSync(
-	Layer.build(NoteRepositoryTest).pipe(
-		Effect.map((ctx) => EffectContext.get(ctx, NoteRepository)),
-		Effect.scoped,
-	),
-);
-const sharedTestLayer: Layer.Layer<NoteRepository> = Layer.succeed(
-	NoteRepository,
-	_sharedTestService,
-);
-
-const testApp = buildApp(sharedTestLayer);
-
-export const notesRoute = { app, testApp } satisfies RouteModule<typeof app>;
+export const notesRoute = { app } satisfies RouteModule<typeof app>;

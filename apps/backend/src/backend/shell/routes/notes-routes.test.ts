@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { notesRoute } from "./notes-routes.ts";
+import { buildTestApp } from "./_test-helpers.ts";
+import { buildNotesApp, notesRoute } from "./notes-routes.ts";
 
 // Minimal typed shapes for test assertions — avoids noPropertyAccessFromIndexSignature errors.
 type NoteBody = { id: string; title: string; body?: string; createdAt: string };
@@ -10,8 +11,10 @@ type ListBody = { items: NoteBody[]; nextCursor: string | null };
 // POST /notes
 // ---------------------------------------------------------------------------
 describe("POST /notes", () => {
+	const app = buildTestApp(buildNotesApp);
+
 	it("201 happy path — title only", async () => {
-		const res = await notesRoute.testApp.request("/notes", {
+		const res = await app.request("/notes", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ title: "Hello" }),
@@ -25,7 +28,7 @@ describe("POST /notes", () => {
 	});
 
 	it("201 happy path — title and body", async () => {
-		const res = await notesRoute.testApp.request("/notes", {
+		const res = await app.request("/notes", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ title: "Hello", body: "World" }),
@@ -37,7 +40,7 @@ describe("POST /notes", () => {
 	});
 
 	it("422 for empty title", async () => {
-		const res = await notesRoute.testApp.request("/notes", {
+		const res = await app.request("/notes", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ title: "" }),
@@ -48,7 +51,7 @@ describe("POST /notes", () => {
 	});
 
 	it("422 for title longer than 100 chars", async () => {
-		const res = await notesRoute.testApp.request("/notes", {
+		const res = await app.request("/notes", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ title: "a".repeat(101) }),
@@ -59,7 +62,7 @@ describe("POST /notes", () => {
 	});
 
 	it("422 for body longer than 2000 chars", async () => {
-		const res = await notesRoute.testApp.request("/notes", {
+		const res = await app.request("/notes", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ title: "Valid", body: "b".repeat(2001) }),
@@ -74,8 +77,10 @@ describe("POST /notes", () => {
 // GET /notes/:id
 // ---------------------------------------------------------------------------
 describe("GET /notes/:id", () => {
+	const app = buildTestApp(buildNotesApp);
+
 	it("200 happy path — returns the created note", async () => {
-		const createRes = await notesRoute.testApp.request("/notes", {
+		const createRes = await app.request("/notes", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ title: "Find me" }),
@@ -83,7 +88,7 @@ describe("GET /notes/:id", () => {
 		expect(createRes.status).toBe(201);
 		const created = (await createRes.json()) as NoteBody;
 
-		const res = await notesRoute.testApp.request(`/notes/${created.id}`);
+		const res = await app.request(`/notes/${created.id}`);
 		expect(res.status).toBe(200);
 		const body = (await res.json()) as NoteBody;
 		expect(body.id).toBe(created.id);
@@ -91,7 +96,7 @@ describe("GET /notes/:id", () => {
 	});
 
 	it("404 for missing id", async () => {
-		const res = await notesRoute.testApp.request("/notes/non-existent-id");
+		const res = await app.request("/notes/non-existent-id");
 		expect(res.status).toBe(404);
 		const body = (await res.json()) as ErrorBody;
 		expect(typeof body.error).toBe("string");
@@ -102,8 +107,10 @@ describe("GET /notes/:id", () => {
 // GET /notes
 // ---------------------------------------------------------------------------
 describe("GET /notes", () => {
+	const app = buildTestApp(buildNotesApp);
+
 	it("200 with items/nextCursor shape", async () => {
-		const res = await notesRoute.testApp.request("/notes");
+		const res = await app.request("/notes");
 		expect(res.status).toBe(200);
 		const body = (await res.json()) as ListBody;
 		expect(Array.isArray(body.items)).toBe(true);
@@ -111,8 +118,6 @@ describe("GET /notes", () => {
 	});
 
 	it("supports limit query param", async () => {
-		const app = notesRoute.testApp;
-
 		for (let i = 1; i <= 3; i++) {
 			await app.request("/notes", {
 				method: "POST",
@@ -128,7 +133,7 @@ describe("GET /notes", () => {
 	});
 
 	it("returns nextCursor as null when no more pages", async () => {
-		const res = await notesRoute.testApp.request("/notes?limit=100");
+		const res = await app.request("/notes?limit=100");
 		expect(res.status).toBe(200);
 		const body = (await res.json()) as ListBody;
 		expect(body.nextCursor).toBeNull();
@@ -139,8 +144,10 @@ describe("GET /notes", () => {
 // DELETE /notes/:id
 // ---------------------------------------------------------------------------
 describe("DELETE /notes/:id", () => {
+	const app = buildTestApp(buildNotesApp);
+
 	it("204 happy path", async () => {
-		const createRes = await notesRoute.testApp.request("/notes", {
+		const createRes = await app.request("/notes", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ title: "Delete me" }),
@@ -148,14 +155,14 @@ describe("DELETE /notes/:id", () => {
 		expect(createRes.status).toBe(201);
 		const created = (await createRes.json()) as NoteBody;
 
-		const res = await notesRoute.testApp.request(`/notes/${created.id}`, {
+		const res = await app.request(`/notes/${created.id}`, {
 			method: "DELETE",
 		});
 		expect(res.status).toBe(204);
 	});
 
 	it("404 for missing id", async () => {
-		const res = await notesRoute.testApp.request("/notes/ghost-id", {
+		const res = await app.request("/notes/ghost-id", {
 			method: "DELETE",
 		});
 		expect(res.status).toBe(404);
@@ -257,20 +264,22 @@ describe("live app — uses per-request D1 binding", () => {
 // onError mapper coverage
 // ---------------------------------------------------------------------------
 describe("onError mapper", () => {
+	const app = buildTestApp(buildNotesApp);
+
 	it("NoteNotFound → 404 on GET", async () => {
-		const res = await notesRoute.testApp.request("/notes/unknown-id");
+		const res = await app.request("/notes/unknown-id");
 		expect(res.status).toBe(404);
 	});
 
 	it("NoteNotFound → 404 on DELETE", async () => {
-		const res = await notesRoute.testApp.request("/notes/unknown-id", {
+		const res = await app.request("/notes/unknown-id", {
 			method: "DELETE",
 		});
 		expect(res.status).toBe(404);
 	});
 
 	it("NoteTitleTooLong → 422 on POST", async () => {
-		const res = await notesRoute.testApp.request("/notes", {
+		const res = await app.request("/notes", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ title: "x".repeat(101) }),
@@ -279,11 +288,46 @@ describe("onError mapper", () => {
 	});
 
 	it("NoteBodyTooLong → 422 on POST", async () => {
-		const res = await notesRoute.testApp.request("/notes", {
+		const res = await app.request("/notes", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ title: "Valid", body: "y".repeat(2001) }),
 		});
 		expect(res.status).toBe(422);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Per-suite isolation — proves no cross-suite state leakage
+// ---------------------------------------------------------------------------
+describe("isolation suite A", () => {
+	const app = buildTestApp(buildNotesApp);
+
+	it("POSTs a note and GET /notes returns exactly 1 item", async () => {
+		await app.request("/notes", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ title: "Suite A note" }),
+		});
+		const res = await app.request("/notes");
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as ListBody;
+		expect(body.items).toHaveLength(1);
+	});
+});
+
+describe("isolation suite B", () => {
+	const app = buildTestApp(buildNotesApp);
+
+	it("POSTs a note and GET /notes returns exactly 1 item", async () => {
+		await app.request("/notes", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ title: "Suite B note" }),
+		});
+		const res = await app.request("/notes");
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as ListBody;
+		expect(body.items).toHaveLength(1);
 	});
 });
