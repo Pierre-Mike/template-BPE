@@ -2,7 +2,11 @@ import { Effect, Context as EffectContext, Layer } from "effect";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { NoteBodyTooLong, type NoteId, NoteNotFound, NoteTitleTooLong } from "../../core/note.ts";
-import { NoteRepository, NoteRepositoryTest } from "../../infra/note-repository.ts";
+import {
+	makeNoteRepositoryLive,
+	NoteRepository,
+	NoteRepositoryTest,
+} from "../../infra/note-repository.ts";
 import { defineRoute, type WorkerBindings } from "../effect-handler.ts";
 import type { RouteModule } from "./_types.ts";
 
@@ -93,7 +97,9 @@ const deleteNoteHandler = (c: AnyContext) =>
 // App factory (parameterised over the NoteRepository layer)
 // ---------------------------------------------------------------------------
 
-const buildApp = (deps: Layer.Layer<NoteRepository>) =>
+const buildApp = (
+	deps: Layer.Layer<NoteRepository> | ((c: AnyContext) => Layer.Layer<NoteRepository>),
+) =>
 	new Hono<{ Bindings: WorkerBindings }>()
 		.post(
 			"/notes",
@@ -129,12 +135,9 @@ const buildApp = (deps: Layer.Layer<NoteRepository>) =>
 		);
 
 // ---------------------------------------------------------------------------
-// Live app
-// TODO: wire to real D1 via makeNoteRepositoryLive(c.env.DB) once D1 binding
-//       is available in WorkerBindings. For now uses NoteRepositoryTest as a
-//       placeholder so the app compiles and can be mounted.
+// Live app — per-request D1-backed repository
 // ---------------------------------------------------------------------------
-const app = buildApp(NoteRepositoryTest);
+const app = buildApp((c) => makeNoteRepositoryLive(c.env.DB));
 
 // ---------------------------------------------------------------------------
 // Test app — shares ONE in-memory store across all route handlers.

@@ -8,7 +8,7 @@ interface D1PreparedStatement {
 	run(): Promise<{ meta: { changes: number } }>;
 }
 
-interface D1Database {
+export interface D1Database {
 	prepare(query: string): D1PreparedStatement;
 }
 

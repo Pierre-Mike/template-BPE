@@ -13,10 +13,10 @@ compatibility_date = "2025-03-17"
 # Wires a Cloudflare D1 (SQLite-compatible) database to your Worker.
 # The NoteRepository infra layer is designed to consume this "DB" binding.
 # ---------------------------------------------------------------------------
-# [[d1_databases]]
-# binding = "DB"          # The name your Worker code uses (env.DB)
-# database_name = "my-d1-database"   # Human-readable name in the Cloudflare dashboard
-# database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # UUID from `wrangler d1 create`
+[[d1_databases]]
+binding = "DB"
+database_name = "template-bpe-notes"
+database_id = "00000000-0000-0000-0000-000000000000"
 
 # ---------------------------------------------------------------------------
 # KV NAMESPACE BINDING (alternative to D1 for key-value storage)
