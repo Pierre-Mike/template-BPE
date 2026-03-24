@@ -1,0 +1,34 @@
+{
+	"pass_rate": 0.34285714285714286,
+	"timestamp": "2026-03-19T19-34-03",
+	"results": [
+		{
+			"id": "todo-app",
+			"pass_rate": 0.6
+		},
+		{
+			"id": "caching-layer",
+			"pass_rate": 0.2
+		},
+		{
+			"id": "api-versioning",
+			"pass_rate": 0.4
+		},
+		{
+			"id": "microservices-migration",
+			"pass_rate": 0.4
+		},
+		{
+			"id": "auth-replacement",
+			"pass_rate": 0.2
+		},
+		{
+			"id": "database-sharding",
+			"pass_rate": 0.2
+		},
+		{
+			"id": "new-hire-onboarding",
+			"pass_rate": 0.4
+		}
+	]
+}

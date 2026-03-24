@@ -1,16 +1,8 @@
 import { Context, Effect, Layer } from "effect";
 import { createNote, type Note, type NoteError, type NoteId, NoteNotFound } from "../core/note.ts";
+import type { D1Database } from "./d1-types.ts";
 
-interface D1PreparedStatement {
-	bind(...values: unknown[]): D1PreparedStatement;
-	first<T = Record<string, unknown>>(): Promise<T | null>;
-	all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
-	run(): Promise<{ meta: { changes: number } }>;
-}
-
-export interface D1Database {
-	prepare(query: string): D1PreparedStatement;
-}
+export type { D1Database } from "./d1-types.ts";
 
 export interface NoteListResult {
 	readonly items: Note[];
@@ -43,7 +35,7 @@ export const makeNoteRepositoryLive = (d1: D1Database): Layer.Layer<NoteReposito
 	Layer.succeed(NoteRepository, {
 		create: (input) =>
 			Effect.gen(function* () {
-				const note = yield* createNote(input);
+				const note = yield* createNote({ ...input, now: new Date() });
 				yield* Effect.promise(() =>
 					d1
 						.prepare("INSERT INTO notes (id, title, body, created_at) VALUES (?, ?, ?, ?)")

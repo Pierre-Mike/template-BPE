@@ -10,31 +10,33 @@ import {
 } from "./note.ts";
 
 describe("createNote", () => {
+	const now = new Date("2026-01-01T00:00:00Z");
+
 	it("creates a valid note with body", async () => {
 		const result = await Effect.runPromise(
-			createNote({ id: "note-1", title: "Hello World", body: "Some content" }),
+			createNote({ id: "note-1", title: "Hello World", body: "Some content", now }),
 		);
 		expect(result.id as string).toBe("note-1");
 		expect(result.title).toBe("Hello World");
 		expect(result.body).toBe("Some content");
-		expect(result.createdAt).toBeInstanceOf(Date);
+		expect(result.createdAt).toEqual(now);
 	});
 
 	it("creates a valid note without body", async () => {
-		const result = await Effect.runPromise(createNote({ id: "note-2", title: "Hello World" }));
+		const result = await Effect.runPromise(createNote({ id: "note-2", title: "Hello World", now }));
 		expect(result.title).toBe("Hello World");
 		expect(result.body).toBeUndefined();
 	});
 
 	it("creates a valid note with max-length title (100 chars)", async () => {
 		const title = "a".repeat(100);
-		const result = await Effect.runPromise(createNote({ id: "note-3", title }));
+		const result = await Effect.runPromise(createNote({ id: "note-3", title, now }));
 		expect(result.title).toBe(title);
 	});
 
 	it("fails with NoteTitleTooLong for title over 100 chars", async () => {
 		const title = "a".repeat(101);
-		const result = await Effect.runPromise(Effect.either(createNote({ id: "note-1", title })));
+		const result = await Effect.runPromise(Effect.either(createNote({ id: "note-1", title, now })));
 		expect(Either.isLeft(result)).toBe(true);
 		if (Either.isLeft(result)) {
 			expect(result.left).toBeInstanceOf(NoteTitleTooLong);
@@ -45,7 +47,9 @@ describe("createNote", () => {
 	});
 
 	it("fails with NoteTitleTooLong for empty title", async () => {
-		const result = await Effect.runPromise(Effect.either(createNote({ id: "note-1", title: "" })));
+		const result = await Effect.runPromise(
+			Effect.either(createNote({ id: "note-1", title: "", now })),
+		);
 		expect(Either.isLeft(result)).toBe(true);
 		if (Either.isLeft(result)) {
 			expect(result.left).toBeInstanceOf(NoteTitleTooLong);
@@ -55,7 +59,7 @@ describe("createNote", () => {
 	it("fails with NoteBodyTooLong for body over 2000 chars", async () => {
 		const body = "a".repeat(2001);
 		const result = await Effect.runPromise(
-			Effect.either(createNote({ id: "note-1", title: "Hello", body })),
+			Effect.either(createNote({ id: "note-1", title: "Hello", body, now })),
 		);
 		expect(Either.isLeft(result)).toBe(true);
 		if (Either.isLeft(result)) {
@@ -68,8 +72,16 @@ describe("createNote", () => {
 
 	it("creates a valid note with max-length body (2000 chars)", async () => {
 		const body = "a".repeat(2000);
-		const result = await Effect.runPromise(createNote({ id: "note-4", title: "Hello", body }));
+		const result = await Effect.runPromise(createNote({ id: "note-4", title: "Hello", body, now }));
 		expect(result.body).toBe(body);
+	});
+
+	it("uses the provided timestamp, not system clock", async () => {
+		const fixedDate = new Date("2020-06-15T12:00:00Z");
+		const result = await Effect.runPromise(
+			createNote({ id: "note-5", title: "Deterministic", now: fixedDate }),
+		);
+		expect(result.createdAt).toEqual(fixedDate);
 	});
 });
 

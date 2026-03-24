@@ -49,6 +49,7 @@ export const createNote = (input: {
 	readonly id: string;
 	readonly title: string;
 	readonly body?: string;
+	readonly now: Date;
 }): Effect.Effect<Note, NoteError> =>
 	Effect.gen(function* () {
 		yield* validateTitle(input.title);
@@ -59,6 +60,6 @@ export const createNote = (input: {
 			id: input.id as NoteId,
 			title: input.title,
 			...(input.body !== undefined ? { body: input.body } : {}),
-			createdAt: new Date(),
+			createdAt: input.now,
 		};
 	});
