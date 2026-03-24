@@ -23,5 +23,11 @@ directory = "dist/client"
 [env.staging]
 name = "template-bpe-frontend-staging"
 
+[env.staging.vars]
+PUBLIC_API_URL = "https://staging-template-bpe-backend.workers.dev"
+
 [env.production]
 name = "template-bpe-frontend-production"
+
+[env.production.vars]
+PUBLIC_API_URL = "https://template-bpe-backend.workers.dev"
