@@ -1,5 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 import { createNote, type Note, type NoteError, type NoteId, NoteNotFound } from "../core/note.ts";
+import { makeTestNoteRepository } from "./note-repository-test.ts";
 
 interface D1PreparedStatement {
 	bind(...values: unknown[]): D1PreparedStatement;
@@ -33,10 +34,7 @@ export interface NoteRepository {
 
 export const NoteRepository = Context.GenericTag<NoteRepository>("NoteRepository");
 
-export { makeTestNoteRepository } from "./note-repository-test.ts";
-
-import { makeTestNoteRepository } from "./note-repository-test.ts";
-/** @deprecated Use makeTestNoteRepository() instead. Will be removed once all consumers are migrated. */
+/** @deprecated Use `makeTestNoteRepository()` from `./note-repository-test.ts` instead. */
 export const NoteRepositoryTest: Layer.Layer<NoteRepository> = makeTestNoteRepository();
 
 export const makeNoteRepositoryLive = (d1: D1Database): Layer.Layer<NoteRepository> =>
