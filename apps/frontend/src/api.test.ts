@@ -17,4 +17,13 @@ describe("api re-export", () => {
 		expect(typeof client.health.$get).toBe("function");
 		expect(typeof client.version.$get).toBe("function");
 	});
+
+	// --- Cycle 3: the typed client exposes notes routes ---
+	it("createBackendClient returns client with notes routes", async () => {
+		const { createBackendClient } = await import("./api.ts");
+		const client = createBackendClient("http://localhost:8787");
+		expect(typeof client.notes.$get).toBe("function");
+		expect(typeof client.notes.$post).toBe("function");
+		expect(typeof client.notes[":id"].$get).toBe("function");
+	});
 });

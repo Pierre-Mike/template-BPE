@@ -1,0 +1,32 @@
+---
+import { env } from "cloudflare:workers";
+import { createBackendClient } from "../../api";
+import Base from "../../layouts/Base.astro";
+import { parseDetailResponse } from "../../notes-helpers";
+
+const apiBase = env.PUBLIC_API_URL ?? "http://localhost:8787";
+const api = createBackendClient(apiBase);
+
+const { id = "" } = Astro.params;
+const res = await api.notes[":id"].$get({ param: { id } });
+const { note, notFound } = await parseDetailResponse(res);
+---
+
+<Base title={note ? note.title : "Note not found"}>
+	<main>
+		{notFound ? (
+			<>
+				<h1>Note not found</h1>
+				<p>The note you are looking for does not exist.</p>
+				<a href="/notes">Back to notes</a>
+			</>
+		) : (
+			<>
+				<h1>{note!.title}</h1>
+				{note!.body && <p>{note!.body}</p>}
+				<p><small>Created: {note!.createdAt}</small></p>
+				<a href="/notes">Back to notes</a>
+			</>
+		)}
+	</main>
+</Base>
