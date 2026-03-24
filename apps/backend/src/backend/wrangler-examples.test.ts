@@ -11,25 +11,25 @@ describe("wrangler.toml deployment config examples", () => {
 		expect(await file.exists()).toBe(true);
 	});
 
-	it("contains a commented [[d1_databases]] block", async () => {
+	it("contains a live (uncommented) [[d1_databases]] block", async () => {
 		const source = await Bun.file(wranglerPath).text();
-		// Must appear as a comment (preceded by #)
-		expect(source).toMatch(/^#\s*\[\[d1_databases\]\]/m);
+		// D1 is now provisioned — block must appear without a leading #
+		expect(source).toMatch(/^\[\[d1_databases\]\]/m);
 	});
 
-	it('contains binding = "DB" in the d1_databases example', async () => {
+	it('contains binding = "DB" in the d1_databases block', async () => {
 		const source = await Bun.file(wranglerPath).text();
-		expect(source).toMatch(/^#\s*binding\s*=\s*"DB"/m);
+		expect(source).toMatch(/^binding\s*=\s*"DB"/m);
 	});
 
-	it("contains database_name placeholder in the d1_databases example", async () => {
+	it("contains database_name in the d1_databases block", async () => {
 		const source = await Bun.file(wranglerPath).text();
-		expect(source).toMatch(/^#\s*database_name\s*=/m);
+		expect(source).toMatch(/^database_name\s*=/m);
 	});
 
-	it("contains database_id placeholder in the d1_databases example", async () => {
+	it("contains database_id in the d1_databases block", async () => {
 		const source = await Bun.file(wranglerPath).text();
-		expect(source).toMatch(/^#\s*database_id\s*=/m);
+		expect(source).toMatch(/^database_id\s*=/m);
 	});
 
 	it("contains a commented [[kv_namespaces]] block", async () => {
@@ -47,9 +47,9 @@ describe("wrangler.toml deployment config examples", () => {
 		expect(source).toMatch(/^#\s*\[vars\]/m);
 	});
 
-	it("has no live (uncommented) [[d1_databases]] block", async () => {
+	it("has a live (uncommented) [[d1_databases]] block — D1 is now provisioned", async () => {
 		const source = await Bun.file(wranglerPath).text();
-		expect(source).not.toMatch(/^\[\[d1_databases\]\]/m);
+		expect(source).toMatch(/^\[\[d1_databases\]\]/m);
 	});
 
 	it("has no live (uncommented) [[kv_namespaces]] block", async () => {

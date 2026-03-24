@@ -1,7 +1,8 @@
 import { Cause, Effect, Exit, Layer, Option } from "effect";
 import type { Context as HonoContext } from "hono";
+import type { D1Database } from "../infra/note-repository.ts";
 
-export type WorkerBindings = { ENVIRONMENT?: string };
+export type WorkerBindings = { ENVIRONMENT?: string; DB: D1Database };
 
 type AnyContext = HonoContext<{ Bindings: WorkerBindings }>;
 

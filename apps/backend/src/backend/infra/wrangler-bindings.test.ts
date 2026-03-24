@@ -6,11 +6,11 @@ import { BINDINGS } from "./wrangler-bindings.ts";
 const wranglerToml = readFileSync(join(import.meta.dir, "../../../wrangler.toml"), "utf-8");
 
 describe("wrangler.toml deployment config examples", () => {
-	it("contains a commented [[d1_databases]] block with required placeholders", () => {
-		expect(wranglerToml).toContain("# [[d1_databases]]");
-		expect(wranglerToml).toContain(`# binding = "${BINDINGS.D1}"`);
-		expect(wranglerToml).toContain("# database_name");
-		expect(wranglerToml).toContain("# database_id");
+	it("contains a live [[d1_databases]] block with required fields", () => {
+		expect(wranglerToml).toContain("[[d1_databases]]");
+		expect(wranglerToml).toContain(`binding = "${BINDINGS.D1}"`);
+		expect(wranglerToml).toContain("database_name");
+		expect(wranglerToml).toContain("database_id");
 	});
 
 	it("contains a commented [[kv_namespaces]] block as an alternative example", () => {
@@ -23,14 +23,11 @@ describe("wrangler.toml deployment config examples", () => {
 		expect(wranglerToml).toContain("# [vars]");
 	});
 
-	it("has no live (uncommented) binding blocks that would break wrangler deploy", () => {
+	it("has no live (uncommented) [[kv_namespaces]] or [vars] blocks", () => {
 		const lines = wranglerToml.split("\n");
-		const liveBindings = lines.filter(
-			(line) =>
-				/^\[\[d1_databases\]\]/.test(line) ||
-				/^\[\[kv_namespaces\]\]/.test(line) ||
-				/^\[vars\]/.test(line),
+		const unexpectedLiveBindings = lines.filter(
+			(line) => /^\[\[kv_namespaces\]\]/.test(line) || /^\[vars\]/.test(line),
 		);
-		expect(liveBindings).toHaveLength(0);
+		expect(unexpectedLiveBindings).toHaveLength(0);
 	});
 });

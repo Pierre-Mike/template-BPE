@@ -165,6 +165,95 @@ describe("DELETE /notes/:id", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Live app uses D1 binding
+// ---------------------------------------------------------------------------
+describe("live app — uses per-request D1 binding", () => {
+	// Minimal in-memory mock of the D1Database interface so we can test that
+	// the live `app` routes through makeNoteRepositoryLive(c.env.DB).
+	type MockRow = { id: string; title: string; body: string | null; created_at: string };
+
+	const runInsert = (
+		store: Map<string, MockRow>,
+		values: unknown[],
+	): { meta: { changes: number } } => {
+		const [id, title, body, created_at] = values as [string, string, string | null, string];
+		store.set(id, { id, title, body, created_at });
+		return { meta: { changes: 1 } };
+	};
+
+	const runDelete = (
+		store: Map<string, MockRow>,
+		values: unknown[],
+	): { meta: { changes: number } } => {
+		const deleted = store.delete(values[0] as string);
+		return { meta: { changes: deleted ? 1 : 0 } };
+	};
+
+	const makeMockD1 = () => {
+		const store = new Map<string, MockRow>();
+		return {
+			prepare(query: string) {
+				return {
+					bind(...values: unknown[]) {
+						return {
+							first: async <T>(): Promise<T | null> => {
+								if (query.includes("WHERE id = ?")) {
+									return (store.get(values[0] as string) as T) ?? null;
+								}
+								return null;
+							},
+							all: async <T>(): Promise<{ results: T[] }> => ({
+								results: Array.from(store.values()) as T[],
+							}),
+							run: async (): Promise<{ meta: { changes: number } }> => {
+								if (query.startsWith("INSERT")) return runInsert(store, values);
+								if (query.startsWith("DELETE")) return runDelete(store, values);
+								return { meta: { changes: 0 } };
+							},
+						};
+					},
+				};
+			},
+		};
+	};
+
+	it("POST /notes returns 201 when DB binding is provided", async () => {
+		const mockDB = makeMockD1();
+		const res = await notesRoute.app.request(
+			"/notes",
+			{
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ title: "Live note" }),
+			},
+			{ DB: mockDB },
+		);
+		expect(res.status).toBe(201);
+		const body = (await res.json()) as NoteBody;
+		expect(body.title).toBe("Live note");
+	});
+
+	it("GET /notes/:id returns 200 for a note persisted via D1", async () => {
+		const mockDB = makeMockD1();
+		const createRes = await notesRoute.app.request(
+			"/notes",
+			{
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ title: "Persisted" }),
+			},
+			{ DB: mockDB },
+		);
+		const created = (await createRes.json()) as NoteBody;
+
+		const getRes = await notesRoute.app.request(`/notes/${created.id}`, {}, { DB: mockDB });
+		expect(getRes.status).toBe(200);
+		const body = (await getRes.json()) as NoteBody;
+		expect(body.id).toBe(created.id);
+	});
+});
+
+// ---------------------------------------------------------------------------
 // onError mapper coverage
 // ---------------------------------------------------------------------------
 describe("onError mapper", () => {
