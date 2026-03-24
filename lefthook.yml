@@ -1,7 +1,7 @@
 pre-commit:
   commands:
     biome:
-      glob: "*.{ts,js,json}"
+      glob: "*.{ts,js,json,astro}"
       run: bunx biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
 
