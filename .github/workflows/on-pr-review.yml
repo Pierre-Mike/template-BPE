@@ -39,20 +39,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract issue number from PR body
+      - name: Extract issue numbers from PR body
         if: steps.bot-check.outputs.skip != 'true'
         id: issue
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          ISSUE_NUMBER=$(echo "$PR_BODY" | grep -oP 'Closes #\K[0-9]+' | head -1)
-          if [ -z "$ISSUE_NUMBER" ]; then
-            echo "No linked issue found in PR body — skipping review."
+          # Extract all "Closes #N" references (supports both single-slice and batch PRs)
+          ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -oP 'Closes #\K[0-9]+' | sort -u | tr '\n' ',' | sed 's/,$//')
+          if [ -z "$ISSUE_NUMBERS" ]; then
+            echo "No linked issues found in PR body — skipping review."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          echo "number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "numbers=$ISSUE_NUMBERS" >> "$GITHUB_OUTPUT"
           echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "Linked issues: $ISSUE_NUMBERS"
 
       - uses: actions/setup-node@v4
         if: steps.bot-check.outputs.skip != 'true' && steps.issue.outputs.skip != 'true'
@@ -82,12 +84,15 @@ jobs:
           claude_args: '--allowedTools "Bash(gh:*),Read,Glob,Grep"'
           show_full_output: true
           prompt: |
-            You are a code reviewer for a PR implementing slice issue #${{ steps.issue.outputs.number }}.
+            You are a code reviewer for a PR implementing slice issues: ${{ steps.issue.outputs.numbers }}
 
             ## Step 1 — Fetch context
 
-            Fetch the slice issue to understand what was requested:
-            gh issue view ${{ steps.issue.outputs.number }} --repo ${{ github.repository }}
+            Fetch ALL linked slice issues to understand what was requested:
+            for NUM in $(echo "${{ steps.issue.outputs.numbers }}" | tr ',' ' '); do
+              echo "=== Issue #$NUM ==="
+              gh issue view "$NUM" --repo ${{ github.repository }}
+            done
 
             Fetch the PR diff:
             gh pr diff ${{ github.event.pull_request.number }} --repo ${{ github.repository }}
@@ -156,11 +161,11 @@ jobs:
               -f context="AI Review" \
               -f description="AI review rejected — needs human intervention"
 
-            # Extract issue number and label needs-human
-            ISSUE_NUMBER="${{ steps.issue.outputs.number }}"
-            gh issue edit "$ISSUE_NUMBER" --repo ${{ github.repository }} --add-label needs-human
-            # Remove slice label to prevent retry
-            gh issue edit "$ISSUE_NUMBER" --repo ${{ github.repository }} --remove-label slice || true
+            # Label all linked issues as needs-human
+            for NUM in $(echo "${{ steps.issue.outputs.numbers }}" | tr ',' ' '); do
+              gh issue edit "$NUM" --repo ${{ github.repository }} --add-label needs-human || true
+              gh issue edit "$NUM" --repo ${{ github.repository }} --remove-label slice || true
+            done
             echo "Review rejected — labeled needs-human."
           fi
 
