@@ -1,5 +1,8 @@
 name = "template-bpe-frontend"
 compatibility_date = "2025-03-17"
 
+[vars]
+PUBLIC_API_URL = "https://template-bpe-backend.workers.dev"
+
 [assets]
 directory = "dist/client"
