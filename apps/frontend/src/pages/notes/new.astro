@@ -1,0 +1,48 @@
+---
+import { env } from "cloudflare:workers";
+import { createBackendClient } from "../../api";
+import { parseCreateResponse } from "../../notes-helpers";
+import Base from "../../layouts/Base.astro";
+
+const apiBase = env.PUBLIC_API_URL ?? "http://localhost:8787";
+const api = createBackendClient(apiBase);
+
+let validationError: string | null = null;
+
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData();
+	const title = form.get("title") as string;
+	const body = form.get("body") as string | null;
+
+	const res = await api.notes.$post({
+		json: { title, ...(body ? { body } : {}) },
+	});
+	const result = await parseCreateResponse(res as Response);
+
+	if (result.createdId) {
+		return Astro.redirect(`/notes/${result.createdId}`);
+	}
+	validationError = result.validationError;
+}
+---
+
+<Base title="New Note">
+	<main>
+		<h1>New Note</h1>
+		{validationError && (
+			<p role="alert">{validationError}</p>
+		)}
+		<form method="POST">
+			<div>
+				<label for="title">Title</label>
+				<input id="title" name="title" type="text" required />
+			</div>
+			<div>
+				<label for="body">Body</label>
+				<textarea id="body" name="body"></textarea>
+			</div>
+			<button type="submit">Create</button>
+		</form>
+		<a href="/notes">Cancel</a>
+	</main>
+</Base>
