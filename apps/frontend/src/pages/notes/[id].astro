@@ -1,14 +1,14 @@
 ---
 import { env } from "cloudflare:workers";
 import { createBackendClient } from "../../api";
-import { parseDetailResponse } from "../../notes-helpers";
 import Base from "../../layouts/Base.astro";
+import { parseDetailResponse } from "../../notes-helpers";
 
 const apiBase = env.PUBLIC_API_URL ?? "http://localhost:8787";
 const api = createBackendClient(apiBase);
 
-const { id } = Astro.params;
-const res = await api.notes[":id"].$get({ param: { id: id! } });
+const { id = "" } = Astro.params;
+const res = await api.notes[":id"].$get({ param: { id } });
 const { note, notFound } = await parseDetailResponse(res);
 ---
 

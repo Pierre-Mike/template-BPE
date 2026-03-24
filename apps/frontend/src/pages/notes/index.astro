@@ -1,8 +1,8 @@
 ---
 import { env } from "cloudflare:workers";
 import { createBackendClient } from "../../api";
-import { parseListResponse } from "../../notes-helpers";
 import Base from "../../layouts/Base.astro";
+import { parseListResponse } from "../../notes-helpers";
 
 const apiBase = env.PUBLIC_API_URL ?? "http://localhost:8787";
 const api = createBackendClient(apiBase);
@@ -11,9 +11,13 @@ const url = new URL(Astro.request.url);
 const cursor = url.searchParams.get("cursor") ?? undefined;
 const limit = parseInt(url.searchParams.get("limit") ?? "20", 10);
 
-const res = await api.notes.$get({ query: { ...(cursor ? { cursor } : {}), limit: String(limit) } });
+const res = await api.notes.$get({
+	query: { ...(cursor ? { cursor } : {}), limit: String(limit) },
+});
 const raw = await res.json();
-const { items, nextCursor, isEmpty } = parseListResponse(raw as Parameters<typeof parseListResponse>[0]);
+const { items, nextCursor, isEmpty } = parseListResponse(
+	raw as Parameters<typeof parseListResponse>[0],
+);
 ---
 
 <Base title="Notes">

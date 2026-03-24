@@ -1,8 +1,8 @@
 ---
 import { env } from "cloudflare:workers";
 import { createBackendClient } from "../../api";
-import { parseCreateResponse } from "../../notes-helpers";
 import Base from "../../layouts/Base.astro";
+import { parseCreateResponse } from "../../notes-helpers";
 
 const apiBase = env.PUBLIC_API_URL ?? "http://localhost:8787";
 const api = createBackendClient(apiBase);
