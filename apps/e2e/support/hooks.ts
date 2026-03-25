@@ -34,7 +34,7 @@ async function waitForServer(url: string, timeoutMs: number): Promise<void> {
 	throw new Error(`Server at ${url} did not become ready within ${timeoutMs}ms`);
 }
 
-BeforeAll(async () => {
+BeforeAll({ timeout: STARTUP_TIMEOUT + 10_000 }, async () => {
 	backendProc = spawn("bunx", ["wrangler", "dev", "--port", "8787"], {
 		cwd: path.join(REPO_ROOT, "apps/backend"),
 		stdio: "pipe",
@@ -53,7 +53,7 @@ BeforeAll(async () => {
 	browser = await chromium.launch();
 });
 
-AfterAll(async () => {
+AfterAll({ timeout: 10_000 }, async () => {
 	await browser?.close();
 	backendProc?.kill("SIGTERM");
 	frontendProc?.kill("SIGTERM");
