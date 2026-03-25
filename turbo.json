@@ -24,6 +24,10 @@
 		"//#secret-scan": {
 			"cache": false
 		},
+		"e2e": {
+			"dependsOn": ["build"],
+			"cache": false
+		},
 		"check": {
 			"dependsOn": [
 				"typecheck",
@@ -31,7 +35,8 @@
 				"//#lint:ci",
 				"//#colocated-tests",
 				"//#secret-scan",
-				"build"
+				"build",
+				"e2e"
 			]
 		}
 	}

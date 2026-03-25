@@ -32,6 +32,13 @@ jobs:
           curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
             | tar xz -C /usr/local/bin gitleaks
       - run: bun install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('apps/e2e/package.json') }}
+          restore-keys: playwright-${{ runner.os }}-
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
       - run: bunx turbo check
 
   protected-file-check:

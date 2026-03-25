@@ -1,0 +1,9 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"rootDir": ".",
+		"types": ["node"]
+	},
+	"include": ["support", "steps", "cucumber.mjs"],
+	"exclude": ["node_modules"]
+}
