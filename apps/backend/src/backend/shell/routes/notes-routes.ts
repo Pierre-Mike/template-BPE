@@ -4,8 +4,8 @@ import { Hono } from "hono";
 import { NoteBodyTooLong, type NoteId, NoteNotFound, NoteTitleTooLong } from "../../core/note.ts";
 import {
 	makeNoteRepositoryLive,
+	makeTestNoteRepository,
 	NoteRepository,
-	NoteRepositoryTest,
 } from "../../infra/note-repository.ts";
 import { defineRoute, type WorkerBindings } from "../effect-handler.ts";
 import type { RouteModule } from "./_types.ts";
@@ -142,13 +142,12 @@ const app = buildApp((c) => makeNoteRepositoryLive(c.env.DB));
 // ---------------------------------------------------------------------------
 // Test app — shares ONE in-memory store across all route handlers.
 //
-// NoteRepositoryTest is a Layer.sync, which allocates a new Map on every
-// Effect.provide call. To share state across requests (POST then GET, etc.)
-// we build the service value once and wrap it in Layer.succeed so every
-// request gets the same instance.
+// makeTestNoteRepository() allocates a new Map on every call / Layer.provide.
+// To share state across requests (POST then GET, etc.) we build the service
+// value once and wrap it in Layer.succeed so every request gets the same instance.
 // ---------------------------------------------------------------------------
 const _sharedTestService: NoteRepository = Effect.runSync(
-	Layer.build(NoteRepositoryTest).pipe(
+	Layer.build(makeTestNoteRepository()).pipe(
 		Effect.map((ctx) => EffectContext.get(ctx, NoteRepository)),
 		Effect.scoped,
 	),
