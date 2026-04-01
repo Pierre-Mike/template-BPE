@@ -6,16 +6,7 @@
 		"required_pull_request_reviews": null,
 		"required_status_checks": {
 			"strict": true,
-			"contexts": [
-				"Type Check",
-				"Biome CI",
-				"Test",
-				"Enforce Co-located Tests",
-				"Secret Scan",
-				"Build",
-				"AI Review",
-				"Protected File Check"
-			]
+			"contexts": ["Check", "Protected File Check"]
 		},
 		"enforce_admins": false,
 		"restrictions": null,
