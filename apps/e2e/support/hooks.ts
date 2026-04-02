@@ -1,5 +1,5 @@
 import type { ChildProcess } from "node:child_process";
-import { spawn } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { After, AfterAll, Before, BeforeAll } from "@cucumber/cucumber";
@@ -49,6 +49,11 @@ BeforeAll({ timeout: STARTUP_TIMEOUT + 10_000 }, async () => {
 		waitForServer(`${BACKEND_URL}/health`, STARTUP_TIMEOUT),
 		waitForServer(FRONTEND_URL, STARTUP_TIMEOUT),
 	]);
+
+	execSync("bunx wrangler d1 migrations apply DB --local", {
+		cwd: path.join(REPO_ROOT, "apps/backend"),
+		stdio: "inherit",
+	});
 
 	browser = await chromium.launch();
 });
