@@ -32,7 +32,7 @@ jobs:
           curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
             | tar xz -C /usr/local/bin gitleaks
       - run: bun install --frozen-lockfile
-      - run: bunx turbo check
+      - run: bunx turbo check:local
 
   protected-file-check:
     name: Protected File Check

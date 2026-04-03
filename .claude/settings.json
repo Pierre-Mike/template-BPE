@@ -4,23 +4,24 @@
 		"deny": ["Bash(*--no-verify*)", "Bash(*git push*--force*)"]
 	},
 	"hooks": {
-		"PostToolUse": [
+		"PreToolUse": [
 			{
-				"matcher": "Edit|Write",
+				"matcher": "Write|Edit",
 				"hooks": [
 					{
 						"type": "command",
-						"command": "cd /Users/pierre-mikel/Github/template-BPE && bun run lint"
+						"command": "bun run preToolUse"
 					}
 				]
 			}
 		],
-		"Stop": [
+		"PostToolUse": [
 			{
+				"matcher": "Write|Edit",
 				"hooks": [
 					{
 						"type": "command",
-						"command": "cd /Users/pierre-mikel/Github/template-BPE && turbo typecheck && turbo test"
+						"command": "bun run postToolUse"
 					}
 				]
 			}
