@@ -1,9 +1,10 @@
 import { Hono } from "hono";
+import { healthRoute } from "./routes/health.ts";
 import { notesRoute } from "./routes/notes-routes.ts";
 import { versionRoute } from "./routes/version.ts";
 
 const app = new Hono<{ Bindings: { ENVIRONMENT?: string } }>()
-	.get("/health", (c) => c.json({ status: "ok" as const, timestamp: Date.now() }, 200))
+	.route("/", healthRoute.app)
 	.route("/", versionRoute.app)
 	.route("/", notesRoute.app);
 
