@@ -28,16 +28,18 @@
 			"dependsOn": ["build"],
 			"cache": false
 		},
-		"check": {
+		"check:local": {
 			"dependsOn": [
 				"typecheck",
 				"test",
 				"//#lint:ci",
 				"//#colocated-tests",
 				"//#secret-scan",
-				"build",
-				"e2e"
+				"build"
 			]
+		},
+		"check": {
+			"dependsOn": ["check:local", "e2e"]
 		}
 	}
 }

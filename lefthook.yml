@@ -8,4 +8,4 @@ pre-commit:
 pre-push:
   commands:
     check:
-      run: bunx turbo typecheck test lint:ci colocated-tests secret-scan build
+      run: bunx turbo check:local
