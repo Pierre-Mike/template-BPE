@@ -27,10 +27,6 @@ export const NoteRepository = Context.GenericTag<NoteRepository>("NoteRepository
 
 export { makeTestNoteRepository } from "./note-repository-test.ts";
 
-import { makeTestNoteRepository } from "./note-repository-test.ts";
-/** @deprecated Use makeTestNoteRepository() instead. Will be removed once all consumers are migrated. */
-export const NoteRepositoryTest: Layer.Layer<NoteRepository> = makeTestNoteRepository();
-
 export const makeNoteRepositoryLive = (d1: D1Database): Layer.Layer<NoteRepository> =>
 	Layer.succeed(NoteRepository, {
 		create: (input) =>

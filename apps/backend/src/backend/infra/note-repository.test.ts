@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
 import type { NoteId } from "../core/note.ts";
-import { NoteRepository, NoteRepositoryTest } from "./note-repository.ts";
+import { makeTestNoteRepository, NoteRepository } from "./note-repository.ts";
 
 const run = <A, E>(effect: Effect.Effect<A, E, NoteRepository>) =>
-	Effect.runPromise(Effect.provide(effect, NoteRepositoryTest));
+	Effect.runPromise(Effect.provide(effect, makeTestNoteRepository()));
 
 describe("NoteRepository - create + findById", () => {
 	it("creates a note and retrieves it by id", async () => {
@@ -27,7 +27,7 @@ describe("NoteRepository - create + findById", () => {
 					const repo = yield* NoteRepository;
 					return yield* Effect.either(repo.findById("missing" as NoteId));
 				}),
-				NoteRepositoryTest,
+				makeTestNoteRepository(),
 			),
 		);
 		expect(result._tag).toBe("Left");
