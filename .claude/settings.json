@@ -1,7 +1,18 @@
 {
+	"env": {
+		"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+	},
 	"permissions": {
-		"allow": ["Bash(gh:*)", "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)"],
-		"deny": ["Bash(*--no-verify*)", "Bash(*git push*--force*)"]
+		"allow": [
+			"Bash(gh:*)",
+			"Bash(git add:*)",
+			"Bash(git commit:*)",
+			"Bash(git push:*)"
+		],
+		"deny": [
+			"Bash(*--no-verify*)",
+			"Bash(*git push*--force*)"
+		]
 	},
 	"hooks": {
 		"PreToolUse": [
@@ -11,17 +22,6 @@
 					{
 						"type": "command",
 						"command": "bun run preToolUse"
-					}
-				]
-			}
-		],
-		"PostToolUse": [
-			{
-				"matcher": "Write|Edit",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run postToolUse"
 					}
 				]
 			}

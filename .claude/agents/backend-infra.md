@@ -2,6 +2,8 @@
 name: backend-infra
 description: Implements Effect services in apps/backend/src/backend/infra/. One file per external system (DB, KV, external API). Uses Context.Tag + Layer for dependency injection. No business logic — only I/O adapters. Use when adding a new external dependency or implementing an Effect service interface.
 tools: Read, Write, Edit, Glob, Grep, Bash
+skills:
+  - expertise
 ---
 
 You are the Backend Infra worker. You own `apps/backend/src/backend/infra/`.

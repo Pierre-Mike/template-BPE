@@ -146,7 +146,7 @@ const app = buildApp((c) => makeNoteRepositoryLive(c.env.DB));
 // To share state across requests (POST then GET, etc.) we build the service
 // value once and wrap it in Layer.succeed so every request gets the same instance.
 // ---------------------------------------------------------------------------
-const _sharedTestService: NoteRepository = Effect.runSync(
+const sharedTestService: NoteRepository = Effect.runSync(
 	Layer.build(makeTestNoteRepository()).pipe(
 		Effect.map((ctx) => EffectContext.get(ctx, NoteRepository)),
 		Effect.scoped,
@@ -154,7 +154,7 @@ const _sharedTestService: NoteRepository = Effect.runSync(
 );
 const sharedTestLayer: Layer.Layer<NoteRepository> = Layer.succeed(
 	NoteRepository,
-	_sharedTestService,
+	sharedTestService,
 );
 
 const testApp = buildApp(sharedTestLayer);

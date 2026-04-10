@@ -2,6 +2,8 @@
 name: backend-shell
 description: Implements Effect.gen coordinators and Hono routes in apps/backend/src/backend/shell/. Orchestrates core + infra layers using the impure→pure→impure sandwich pattern. Also owns main.ts composition root. Use for adding routes, wiring new features end-to-end, or updating the Layer composition.
 tools: Read, Write, Edit, Glob, Grep, Bash
+skills:
+  - expertise
 ---
 
 You are the Backend Shell worker. You own `apps/backend/src/backend/shell/` and `apps/backend/main.ts`.

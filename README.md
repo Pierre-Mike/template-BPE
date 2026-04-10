@@ -107,7 +107,7 @@ bun run dev
 | `bun run typecheck` | Turbo typecheck — cached |
 | `bun run lint` | Biome auto-fix (root-level) |
 | `bun run lint:ci` | Biome CI — no fix |
-| `bun run check` | Full pipeline: typecheck + test + lint |
+| `bun run check` | Full pipeline via Turbo check (typecheck + lint + test + colocated-tests + secret-scan + build) |
 
 ## Pre-commit Hooks
 
@@ -120,7 +120,7 @@ Runs automatically on every `git commit` via Lefthook:
 
 ## CI Pipeline
 
-`type-check → biome ci → test → co-located tests → secret-scan → build`
+`type-check → biome ci → test → co-located tests → secret-scan → build` (via `turbo check`)
 
 Each stage gates the next. No force merges.
 

@@ -18,11 +18,15 @@
 			"complexity": {
 				"useMaxParams": {
 					"level": "error",
-					"options": { "max": 2 }
+					"options": {
+						"max": 2
+					}
 				},
 				"noExcessiveCognitiveComplexity": {
 					"level": "error",
-					"options": { "maxAllowedComplexity": 15 }
+					"options": {
+						"maxAllowedComplexity": 15
+					}
 				},
 				"noExcessiveNestedTestSuites": "error"
 			},
@@ -75,7 +79,9 @@
 			"!**/*.tgz",
 			"!**/bun.lock",
 			"!**/.astro",
-			"!**/.wrangler"
+			"!**/.wrangler",
+			"!**/.agentic",
+			"!**/.claude"
 		]
 	}
 }
