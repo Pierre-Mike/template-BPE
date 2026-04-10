@@ -15,7 +15,7 @@
 		"lint:ci": "biome ci .",
 		"colocated-tests": "bash scripts/colocated-tests.sh",
 		"secret-scan": "gitleaks detect --no-banner",
-		"check": "echo 'All checks passed.'",
+		"check": "bunx turbo check",
 		"prepare": "bunx lefthook install"
 	},
 	"devDependencies": {

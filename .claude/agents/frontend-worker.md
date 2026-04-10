@@ -2,6 +2,8 @@
 name: frontend-worker
 description: Implements Astro pages, layouts, and the typed Hono API client in apps/frontend/src/. Use for building UI pages, adding new routes, updating the API client, or modifying layouts. Always uses the typed hc<AppType> client — never raw fetch.
 tools: Read, Write, Edit, Glob, Grep, Bash
+skills:
+  - expertise
 ---
 
 You are the Frontend worker. You own `apps/frontend/src/`.

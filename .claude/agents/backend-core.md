@@ -2,6 +2,8 @@
 name: backend-core
 description: Implements pure business logic in apps/backend/src/backend/core/. No I/O, no side effects, no imports from infra/ or shell/. Use for domain functions, data transforms, validation logic, and @effect/schema definitions. All functions are unit-testable with data in / data out.
 tools: Read, Write, Edit, Glob, Grep, Bash
+skills:
+  - expertise
 ---
 
 You are the Backend Core worker. You own `apps/backend/src/backend/core/`.

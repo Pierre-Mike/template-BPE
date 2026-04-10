@@ -8,7 +8,7 @@
 	},
 	"scripts": {
 		"dev": "wrangler dev",
-		"build": "wrangler deploy --dry-run --outdir dist",
+		"build": "wrangler deploy --dry-run --outdir dist --env=\"\"",
 		"deploy": "wrangler deploy",
 		"start": "wrangler dev",
 		"test": "bun test",

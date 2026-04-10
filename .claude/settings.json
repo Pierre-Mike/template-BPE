@@ -1,7 +1,18 @@
 {
+	"env": {
+		"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+	},
 	"permissions": {
-		"allow": ["Bash(gh:*)", "Bash(git add:*)", "Bash(git commit:*)", "Bash(git push:*)"],
-		"deny": ["Bash(*--no-verify*)", "Bash(*git push*--force*)"]
+		"allow": [
+			"Bash(gh:*)",
+			"Bash(git add:*)",
+			"Bash(git commit:*)",
+			"Bash(git push:*)"
+		],
+		"deny": [
+			"Bash(*--no-verify*)",
+			"Bash(*git push*--force*)"
+		]
 	},
 	"hooks": {
 		"PostToolUse": [
@@ -11,16 +22,6 @@
 					{
 						"type": "command",
 						"command": "cd /Users/pierre-mikel/Github/template-BPE && bun run lint"
-					}
-				]
-			}
-		],
-		"Stop": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "cd /Users/pierre-mikel/Github/template-BPE && turbo typecheck && turbo test"
 					}
 				]
 			}
