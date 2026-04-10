@@ -15,13 +15,13 @@
 		]
 	},
 	"hooks": {
-		"PostToolUse": [
+		"PreToolUse": [
 			{
-				"matcher": "Edit|Write",
+				"matcher": "Write|Edit",
 				"hooks": [
 					{
 						"type": "command",
-						"command": "cd /Users/pierre-mikel/Github/template-BPE && bun run lint"
+						"command": "bun run preToolUse"
 					}
 				]
 			}

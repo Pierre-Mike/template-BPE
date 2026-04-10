@@ -24,7 +24,11 @@
 		"//#secret-scan": {
 			"cache": false
 		},
-		"check": {
+		"e2e": {
+			"dependsOn": ["build"],
+			"cache": false
+		},
+		"check:local": {
 			"dependsOn": [
 				"typecheck",
 				"test",
@@ -33,6 +37,9 @@
 				"//#secret-scan",
 				"build"
 			]
+		},
+		"check": {
+			"dependsOn": ["check:local", "e2e"]
 		}
 	}
 }

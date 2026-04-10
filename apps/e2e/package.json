@@ -1,0 +1,17 @@
+{
+	"name": "@template-bpe/e2e",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"e2e": "node -e \"const v=parseInt(process.version.slice(1));if(![20,22].includes(v)&&v<24){console.log('E2E skipped: Node '+process.version+' unsupported by Cucumber (needs 20, 22, or >=24)');process.exit(0)}else{process.exit(1)}\" || bunx cucumber-js",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@cucumber/cucumber": "^12.7.0",
+		"@types/node": "^25.5.0",
+		"playwright": "^1.58.2",
+		"tsx": "^4.21.0",
+		"typescript": "^6.0.2"
+	}
+}
