@@ -1,7 +1,11 @@
 /**
  * TDD: RED phase — tests written before implementation.
  */
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, mock } from "bun:test";
+
+mock.module("cloudflare:workers", () => ({
+	env: { PUBLIC_API_URL: "http://localhost:8787" },
+}));
 
 // --- Cycle 1: api.ts re-exports createBackendClient from @template-bpe/api-contract ---
 describe("api re-export", () => {
@@ -25,5 +29,13 @@ describe("api re-export", () => {
 		expect(typeof client.notes.$get).toBe("function");
 		expect(typeof client.notes.$post).toBe("function");
 		expect(typeof client.notes[":id"].$get).toBe("function");
+	});
+
+	// --- Cycle 4: pre-configured api client is exported ---
+	it("exports a pre-configured api client", async () => {
+		const { api } = await import("./api.ts");
+		expect(api).toBeDefined();
+		expect(typeof api.version.$get).toBe("function");
+		expect(typeof api.notes.$get).toBe("function");
 	});
 });

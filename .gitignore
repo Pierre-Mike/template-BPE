@@ -47,3 +47,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # local agent worktrees
 .agentic
+
+# harness-autoagent state dir
+.harness-loop/

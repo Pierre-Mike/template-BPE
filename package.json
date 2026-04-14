@@ -13,8 +13,6 @@
 		"typecheck": "turbo typecheck",
 		"lint": "biome check --write .",
 		"lint:file": "biome check --write",
-		"preToolUse": "bash scripts/preToolUse.sh",
-		"postToolUse": "bash scripts/postToolUse.sh",
 		"lint:ci": "biome ci .",
 		"colocated-tests": "bash scripts/colocated-tests.sh",
 		"secret-scan": "gitleaks detect --no-banner",
@@ -23,9 +21,11 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.7",
+		"@modelcontextprotocol/sdk": "^1.29.0",
 		"@types/bun": "latest",
 		"lefthook": "^2.1.4",
 		"turbo": "^2.7.0",
-		"typescript": "^5"
+		"typescript": "^5",
+		"zod": "^4.3.6"
 	}
 }

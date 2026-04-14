@@ -11,7 +11,11 @@
 		],
 		"deny": [
 			"Bash(*--no-verify*)",
-			"Bash(*git push*--force*)"
+			"Bash(*git push*--force*)",
+			"Bash(rm -rf*)",
+			"Bash(git reset --hard*)",
+			"Bash(gh repo delete:*)",
+			"Bash(find * -delete*)"
 		]
 	},
 	"hooks": {
@@ -21,7 +25,18 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "bun run preToolUse"
+						"command": "bun .claude/hooks.ts"
+					}
+				]
+			}
+		],
+		"PostToolUse": [
+			{
+				"matcher": "Write|Edit",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bun .claude/hooks.ts"
 					}
 				]
 			}
