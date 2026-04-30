@@ -4,8 +4,8 @@
  * No runtime assertions — TypeScript is the test runner here.
  */
 import { Hono } from "hono";
-import type { WorkerBindings } from "../effect-handler.ts";
-import type { RouteModule } from "./_types.ts";
+import type { WorkerBindings } from "./effect-handler.ts";
+import type { RouteModule } from "./route-types.ts";
 
 type TestApp = Hono<{ Bindings: WorkerBindings }>;
 

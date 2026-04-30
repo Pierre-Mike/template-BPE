@@ -49,7 +49,7 @@ describe("GitHub Actions secrets for Cloudflare deployment", () => {
 });
 
 describe("CI pipeline — protects against credential leaks in git history", () => {
-	const ciPath = new URL("../../../../.github/workflows/ci.yml", import.meta.url);
+	const ciPath = new URL("../../../../../.github/workflows/ci.yml", import.meta.url);
 
 	it("ci.yml installs gitleaks for secret scanning", async () => {
 		const source = await Bun.file(ciPath).text();

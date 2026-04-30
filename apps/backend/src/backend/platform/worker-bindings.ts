@@ -1,4 +1,4 @@
-import type { D1Database } from "../infra/d1-types.ts";
+import type { D1Database } from "./d1-types.ts";
 
 /**
  * Cloudflare Workers environment bindings shared across all Hono route apps.

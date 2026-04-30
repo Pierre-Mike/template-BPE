@@ -7,8 +7,8 @@ import {
 	makeTestNoteRepository,
 	NoteRepository,
 } from "../../infra/note-repository.ts";
-import { defineRoute, type WorkerBindings } from "../effect-handler.ts";
-import type { RouteModule } from "./_types.ts";
+import { defineRoute, type WorkerBindings } from "../../platform/effect-handler.ts";
+import type { RouteModule } from "../../platform/route-types.ts";
 
 // ---------------------------------------------------------------------------
 // Error → Response mapper (shared across all note routes)

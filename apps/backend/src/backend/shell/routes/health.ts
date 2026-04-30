@@ -1,8 +1,8 @@
 import { Effect } from "effect";
 import type { Context } from "hono";
 import { Hono } from "hono";
-import { defineRoute, type WorkerBindings } from "../effect-handler.ts";
-import type { RouteModule } from "./_types.ts";
+import { defineRoute, type WorkerBindings } from "../../platform/effect-handler.ts";
+import type { RouteModule } from "../../platform/route-types.ts";
 
 const healthHandler = (_c: Context<{ Bindings: WorkerBindings }>) =>
 	Effect.gen(function* () {

@@ -4,7 +4,7 @@ import { WRANGLER_EXAMPLES } from "./wrangler-examples.ts";
 // RED → GREEN: these tests fail until wrangler.toml is updated with commented binding examples.
 // They verify that documentation-in-code examples exist without activating live bindings.
 describe("wrangler.toml deployment config examples", () => {
-	const wranglerPath = new URL("../../wrangler.toml", import.meta.url);
+	const wranglerPath = new URL("../../../wrangler.toml", import.meta.url);
 
 	it("wrangler.toml exists", async () => {
 		const file = Bun.file(wranglerPath);

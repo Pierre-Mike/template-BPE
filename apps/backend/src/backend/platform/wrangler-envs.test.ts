@@ -6,7 +6,7 @@ import { describe, expect, it } from "bun:test";
 import { WRANGLER_ENVS } from "./wrangler-envs.ts";
 
 describe("wrangler.toml environment blocks (backend)", () => {
-	const wranglerPath = new URL("../../wrangler.toml", import.meta.url);
+	const wranglerPath = new URL("../../../wrangler.toml", import.meta.url);
 
 	it("contains [env.staging] section", async () => {
 		const source = await Bun.file(wranglerPath).text();

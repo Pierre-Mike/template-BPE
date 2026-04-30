@@ -1,8 +1,8 @@
 import { Context, Effect, Layer } from "effect";
 import { createNote, type Note, type NoteError, type NoteId, NoteNotFound } from "../core/note.ts";
-import type { D1Database } from "./d1-types.ts";
+import type { D1Database } from "../platform/d1-types.ts";
 
-export type { D1Database } from "./d1-types.ts";
+export type { D1Database } from "../platform/d1-types.ts";
 
 export interface NoteListResult {
 	readonly items: Note[];

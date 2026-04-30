@@ -19,7 +19,7 @@ describe("DEPLOY_WORKFLOW constants", () => {
 	});
 
 	it("CI_WORKFLOW_NAME matches the name in ci.yml", async () => {
-		const ciPath = new URL("../../../../.github/workflows/ci.yml", import.meta.url);
+		const ciPath = new URL("../../../../../.github/workflows/ci.yml", import.meta.url);
 		const source = await Bun.file(ciPath).text();
 		// ci.yml starts with "name: <CI_WORKFLOW_NAME>"
 		expect(source).toContain(`name: ${DEPLOY_WORKFLOW.CI_WORKFLOW_NAME}`);
