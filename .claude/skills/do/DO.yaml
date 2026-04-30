@@ -26,43 +26,61 @@ leads:
     model: sonnet
     specialists:
 
-      core-coder:
+      feature-coder:
         type: coder
-        scope: apps/backend/src/backend/core/
-        description: "Pure functions, data transforms, validation, @effect/schema. No I/O."
+        scope: apps/backend/src/backend/features/
+        description: >
+          Feature slice work. Each feature lives in features/<name>/ with
+          tier-suffixed files: <name>.core.ts (pure), <name>.repo.ts (Effect
+          service), <name>.migration.ts (SQL DDL), <name>.routes.ts (Hono +
+          Effect.gen), <name>.fixture.ts (test doubles). Co-locate tests as
+          <name>.<tier>.test.ts.
         tools: Read,Glob,Grep,Write,Edit
         skills: effect-ts,expertise,concise
         model: sonnet
         boundaries:
-          - "No I/O — no fetch, DB, file reads, console.log"
-          - "Allowed imports: effect, @effect/schema, other core/ files, shared packages"
-          - "Forbidden imports: ../infra/, ../shell/, hono, cloudflare:workers"
+          - "*.core.ts: no I/O. Allowed: effect, @effect/schema, sibling *.core.ts. Forbidden: ../../platform/, sibling repo/routes/migration/fixture"
+          - "*.repo.ts: Context.Tag service. Allowed: effect, @effect/schema, ./<name>.core.ts (types), ../../platform/d1-types.ts, cloudflare:workers"
+          - "*.migration.ts: SQL DDL constants only. No imports beyond constant exports."
+          - "*.routes.ts: Hono + Effect.gen orchestration. No business logic. Allowed: ./<name>.core.ts, ./<name>.repo.ts, ../../platform/effect-handler.ts, ../../platform/route-types.ts"
+          - "*.fixture.ts: test doubles, only importable from *.test.ts files"
+          - "Cross-feature imports forbidden — share via platform/ or compose in api.ts"
+          - "Adding a new slice: create features/<name>/, register the route in apps/backend/src/backend/api.ts (composition root)"
 
-      infra-coder:
+      platform-coder:
         type: coder
-        scope: apps/backend/src/backend/infra/
-        description: "Effect services — one file per external system, Context.Tag + Layer."
+        scope: apps/backend/src/backend/platform/
+        description: >
+          Feature-agnostic platform infrastructure. One file per concern:
+          config (Effect Service for env), d1-types (Cloudflare D1
+          declarations), effect-handler (defineRoute factory — pure runtime
+          glue), worker-bindings (Hono Bindings type), wrangler-bindings,
+          route-types, agents-conventions, boundary-rules, plus deploy/CI
+          constants (deploy-workflow, github-secrets, wrangler-envs,
+          wrangler-examples).
         tools: Read,Glob,Grep,Write,Edit
         skills: effect-ts,expertise,concise
         model: sonnet
         boundaries:
-          - "One file per external system"
-          - "No business logic — only I/O adapters"
-          - "Live + Test layers for every service"
-          - "Allowed imports: effect, @effect/schema, ../core/ (types only), cloudflare:workers"
-          - "Forbidden imports: ../shell/"
+          - "platform/ must not import from features/ — enforced by depcruise (platform-has-no-feature-deps)"
+          - "effect-handler.ts is pure runtime glue — no feature deps, no business logic (effect-handler-stays-pure-glue)"
+          - "Live + Test layers for every Effect service"
+          - "Boundary rule names live in boundary-rules.ts and must match .dependency-cruiser.cjs in lockstep"
 
-      shell-coder:
+      composition-coder:
         type: coder
-        scope: apps/backend/src/backend/shell/
-        description: "Effect.gen coordinators, Hono routes, composition root."
+        scope: apps/backend/src/backend/
+        description: >
+          Composition root: api.ts (Hono app assembly — thin registry of
+          feature route modules) and main.ts (Cloudflare Workers entry).
+          Use feature-coder for slice work, platform-coder for infra.
         tools: Read,Glob,Grep,Write,Edit
         skills: effect-ts,expertise,concise
         model: sonnet
         boundaries:
-          - "No business logic — pure computation belongs in core/"
-          - "Export AppType from Hono app for frontend type safety"
-          - "Effect.runPromise only at Hono handler boundaries"
+          - "Edit only api.ts and main.ts. Do not modify files inside features/ or platform/"
+          - "api.ts is a thin registry — no handler logic, no Effect.runPromise, no I/O"
+          - "Each new feature route must be wired here"
 
       reviewer:
         type: reviewer

@@ -3,10 +3,14 @@
  * These must match the `name` fields in apps/backend/.dependency-cruiser.cjs.
  */
 export const BOUNDARY_RULES = {
-	/** shell/effect-handler.ts must not import from core/ or infra/ */
-	NO_EFFECT_HANDLER_TO_CORE_OR_INFRA: "no-effect-handler-to-core-or-infra",
-	/** core/ must not import from shell/ or infra/ */
-	NO_CORE_TO_SHELL_OR_INFRA: "no-core-to-shell-or-infra",
+	/** *.core.ts must not import sibling tiers or platform adapters */
+	CORE_IS_PURE: "core-is-pure",
+	/** features must not import each other directly */
+	NO_CROSS_FEATURE_IMPORTS: "no-cross-feature-imports",
+	/** platform/ must not import from features/ */
+	PLATFORM_HAS_NO_FEATURE_DEPS: "platform-has-no-feature-deps",
+	/** platform/effect-handler.ts must not import from features/ */
+	EFFECT_HANDLER_STAYS_PURE_GLUE: "effect-handler-stays-pure-glue",
 } as const;
 
 export type BoundaryRuleName = (typeof BOUNDARY_RULES)[keyof typeof BOUNDARY_RULES];
