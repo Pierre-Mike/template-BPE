@@ -1,14 +1,10 @@
 import { Effect, Context as EffectContext, Layer } from "effect";
 import type { Context } from "hono";
 import { Hono } from "hono";
-import { NoteBodyTooLong, type NoteId, NoteNotFound, NoteTitleTooLong } from "../../core/note.ts";
-import {
-	makeNoteRepositoryLive,
-	makeTestNoteRepository,
-	NoteRepository,
-} from "../../infra/note-repository.ts";
 import { defineRoute, type WorkerBindings } from "../../platform/effect-handler.ts";
 import type { RouteModule } from "../../platform/route-types.ts";
+import { NoteBodyTooLong, type NoteId, NoteNotFound, NoteTitleTooLong } from "./note.core.ts";
+import { makeNoteRepositoryLive, makeTestNoteRepository, NoteRepository } from "./note.repo.ts";
 
 // ---------------------------------------------------------------------------
 // Error → Response mapper (shared across all note routes)

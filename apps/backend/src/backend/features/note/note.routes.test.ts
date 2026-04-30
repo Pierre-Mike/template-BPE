@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { notesRoute } from "./notes-routes.ts";
+import { notesRoute } from "./note.routes.ts";
 
 // Minimal typed shapes for test assertions — avoids noPropertyAccessFromIndexSignature errors.
 type NoteBody = { id: string; title: string; body?: string; createdAt: string };

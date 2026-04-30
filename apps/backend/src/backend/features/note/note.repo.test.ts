@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import type { NoteId } from "../core/note.ts";
-import { makeTestNoteRepository, NoteRepository } from "./note-repository.ts";
+import type { NoteId } from "./note.core.ts";
+import { makeTestNoteRepository, NoteRepository } from "./note.repo.ts";
 
 const run = <A, E>(effect: Effect.Effect<A, E, NoteRepository>) =>
 	Effect.runPromise(Effect.provide(effect, makeTestNoteRepository()));

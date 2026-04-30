@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { NoteRepository } from "./note-repository.ts";
-import { makeTestNoteRepository } from "./note-repository-test.ts";
+import { makeTestNoteRepository } from "./note.repo.fixture.ts";
+import { NoteRepository } from "./note.repo.ts";
 
 describe("makeTestNoteRepository", () => {
 	it("exports a factory function", () => {

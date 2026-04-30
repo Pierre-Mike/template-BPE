@@ -1,6 +1,6 @@
 import { Effect, Layer } from "effect";
-import { createNote, type Note, type NoteId, NoteNotFound } from "../core/note.ts";
-import { NoteRepository } from "./note-repository.ts";
+import { createNote, type Note, type NoteId, NoteNotFound } from "./note.core.ts";
+import { NoteRepository } from "./note.repo.ts";
 
 export const makeTestNoteRepository = (): Layer.Layer<NoteRepository> =>
 	Layer.sync(NoteRepository, () => {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { NOTES_MIGRATION } from "./migration-notes.ts";
+import { NOTES_MIGRATION } from "./note.migration.ts";
 
 describe("D1 migration: 0001_create_notes.sql", () => {
-	const migrationPath = new URL(`../../../${NOTES_MIGRATION.FILE}`, import.meta.url);
+	const migrationPath = new URL(`../../../../${NOTES_MIGRATION.FILE}`, import.meta.url);
 
 	it("migration file exists", async () => {
 		const file = Bun.file(migrationPath);

@@ -1,8 +1,8 @@
 import { Context, Effect, Layer } from "effect";
-import { createNote, type Note, type NoteError, type NoteId, NoteNotFound } from "../core/note.ts";
-import type { D1Database } from "../platform/d1-types.ts";
+import type { D1Database } from "../../platform/d1-types.ts";
+import { createNote, type Note, type NoteError, type NoteId, NoteNotFound } from "./note.core.ts";
 
-export type { D1Database } from "../platform/d1-types.ts";
+export type { D1Database } from "../../platform/d1-types.ts";
 
 export interface NoteListResult {
 	readonly items: Note[];
@@ -25,7 +25,7 @@ export interface NoteRepository {
 
 export const NoteRepository = Context.GenericTag<NoteRepository>("NoteRepository");
 
-export { makeTestNoteRepository } from "./note-repository-test.ts";
+export { makeTestNoteRepository } from "./note.repo.fixture.ts";
 
 export const makeNoteRepositoryLive = (d1: D1Database): Layer.Layer<NoteRepository> =>
 	Layer.succeed(NoteRepository, {
