@@ -1,8 +1,8 @@
 import { Hono } from "hono";
+import { aboutRoute } from "./features/about/about.routes.ts";
+import { healthRoute } from "./features/health/health.routes.ts";
 import { notesRoute } from "./features/note/note.routes.ts";
-import { aboutRoute } from "./shell/routes/about.ts";
-import { healthRoute } from "./shell/routes/health.ts";
-import { versionRoute } from "./shell/routes/version.ts";
+import { versionRoute } from "./features/version/version.routes.ts";
 
 const app = new Hono<{ Bindings: { ENVIRONMENT?: string } }>()
 	.route("/", aboutRoute.app)

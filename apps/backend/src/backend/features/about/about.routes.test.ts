@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { aboutRoute } from "./about.ts";
+import { aboutRoute } from "./about.routes.ts";
 
 describe("GET /about", () => {
 	it("200 returns name and description", async () => {

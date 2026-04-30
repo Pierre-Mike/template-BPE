@@ -1,10 +1,10 @@
 import { Effect } from "effect";
 import type { Context } from "hono";
 import { Hono } from "hono";
-import { getVersion } from "../../core/version.ts";
 import { ConfigService, ConfigTest, makeConfigLayer } from "../../platform/config.ts";
 import { defineRoute, type WorkerBindings } from "../../platform/effect-handler.ts";
 import type { RouteModule } from "../../platform/route-types.ts";
+import { getVersion } from "./version.core.ts";
 
 const versionHandler = (c: Context<{ Bindings: WorkerBindings }>) =>
 	Effect.gen(function* () {

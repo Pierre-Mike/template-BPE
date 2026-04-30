@@ -21,21 +21,18 @@ describe("GET /health", () => {
 });
 
 describe("structural: all route modules mounted in api.ts", () => {
-	it("api.ts imports every route file in shell/routes/", async () => {
-		const routesDir = new URL("./shell/routes/", import.meta.url).pathname;
-		const entries = await readdir(routesDir);
-		// Only consider route module files (not _types, not test files)
-		const routeFiles = entries.filter(
-			(f) => !f.startsWith("_") && !f.includes(".test") && f.endsWith(".ts"),
-		);
-
+	it("api.ts imports every *.routes.ts file in features/", async () => {
+		const featuresDir = new URL("./features/", import.meta.url).pathname;
+		const slices = await readdir(featuresDir, { withFileTypes: true });
 		const source = await Bun.file(new URL("./api.ts", import.meta.url)).text();
 
-		for (const file of routeFiles) {
-			const moduleName = file.replace(".ts", "");
-			expect(source, `api.ts should import from ./shell/routes/${moduleName}.ts`).toContain(
-				`./shell/routes/${moduleName}.ts`,
-			);
+		for (const slice of slices) {
+			if (!slice.isDirectory()) continue;
+			const sliceFiles = await readdir(new URL(`./features/${slice.name}/`, import.meta.url));
+			const routeFile = sliceFiles.find((f) => f.endsWith(".routes.ts") && !f.includes(".test"));
+			if (routeFile === undefined) continue;
+			const importPath = `./features/${slice.name}/${routeFile}`;
+			expect(source, `api.ts should import from ${importPath}`).toContain(importPath);
 		}
 	});
 });
