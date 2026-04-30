@@ -16,29 +16,41 @@ TypeScript monorepo template enforcing code quality through tooling, CI/CD, and 
 
 ## Architecture
 
-Turborepo monorepo with Functional Core / Imperative Shell (Impureim Sandwich):
+Turborepo monorepo with Feature-Sliced Functional Core / Imperative Shell. Backend code is sliced **vertically by feature**; each slice owns its full FCIS stack via tier-suffixed filenames (`*.core.ts`, `*.repo.ts`, `*.routes.ts`, `*.migration.ts`, `*.fixture.ts`):
 
 ```
 apps/
-├── backend/              # Hono on Cloudflare Workers (Effect-TS)
+├── backend/                # Hono on Cloudflare Workers (Effect-TS)
 │   ├── wrangler.toml
+│   ├── .dependency-cruiser.cjs  # Slicing boundary rules (CI-enforced)
 │   └── src/backend/
-│       ├── core/         # PURE — no I/O, no side effects
-│       ├── infra/        # Effect services behind Context.Tag
-│       ├── shell/        # Hono routes + Effect.gen coordinators
-│       │   └── api.ts    # Route definitions, exports AppType for RPC
-│       └── main.ts       # Composition root — Workers fetch handler
-├── frontend/             # Astro on Cloudflare Pages
+│       ├── api.ts          # Composition root — thin Hono registry, exports AppType
+│       ├── main.ts         # Cloudflare Workers fetch handler
+│       ├── features/       # Feature slices — one dir per slice
+│       │   └── <name>/
+│       │       ├── <name>.core.ts      # PURE — no I/O
+│       │       ├── <name>.repo.ts      # Effect service (Context.Tag)
+│       │       ├── <name>.migration.ts # SQL DDL constants
+│       │       ├── <name>.routes.ts    # Hono + Effect.gen
+│       │       └── <name>.fixture.ts   # Test doubles
+│       └── platform/       # Feature-agnostic infrastructure
+│           ├── effect-handler.ts   # defineRoute factory — pure runtime glue
+│           ├── route-types.ts      # RouteModule type
+│           ├── config.ts, d1-types.ts, worker-bindings.ts, wrangler-bindings.ts
+│           └── boundary-rules.ts   # Mirrors depcruise rule names
+├── frontend/               # Astro on Cloudflare Pages
 │   ├── astro.config.ts
 │   ├── wrangler.toml
 │   └── src/
-│       ├── api.ts        # hc<AppType> typed client (zero codegen)
+│       ├── api.ts          # hc<AppType> typed client (zero codegen)
 │       ├── layouts/
 │       └── pages/
 packages/
-└── api-contract/         # Typed Hono RPC client derived from backend's AppType
-    └── src/index.ts      # createBackendClient(url) — hc<AppType>(url)
+└── api-contract/           # Typed Hono RPC client derived from backend's AppType
+    └── src/index.ts        # createBackendClient(url) — hc<AppType>(url)
 ```
+
+`apps/backend/.dependency-cruiser.cjs` enforces four boundary rules at CI time: `core-is-pure`, `no-cross-feature-imports`, `platform-has-no-feature-deps`, `effect-handler-stays-pure-glue`. See `AGENTS.md` for the full rule table.
 
 ### Hono RPC (End-to-End Type Safety)
 
@@ -46,14 +58,15 @@ Types flow automatically from backend routes to the frontend — no codegen, no 
 
 ```
 Backend routes (AppType)        packages/api-contract           Frontend
-shell/api.ts ──────────────►  createBackendClient(url)  ◄──── src/api.ts
+api.ts ────────────────────►  createBackendClient(url)  ◄──── src/api.ts
     typeof app                   hc<AppType>(url)              re-exports client
 ```
 
 ```typescript
-// 1. Backend defines routes — types are inferred automatically
-// apps/backend/src/backend/shell/api.ts
-const app = new Hono().get("/health", (c) => c.json({ status: "ok" }));
+// 1. Backend composes feature route modules in api.ts — types inferred automatically
+// apps/backend/src/backend/api.ts
+import { healthRoute } from "./features/health/health.routes.ts";
+const app = new Hono().route("/", healthRoute.app);
 export type AppType = typeof app;
 
 // 2. api-contract package creates a typed client from AppType
@@ -73,7 +86,7 @@ const api = createBackendClient("http://localhost:8787");
 const res = await api.health.$get(); // fully typed
 ```
 
-**Adding a new route only requires changing `shell/api.ts`** — the types propagate to the frontend automatically through `AppType`.
+**Adding a new feature**: create `features/<name>/`, add tier-suffixed files (`<name>.core.ts`, `<name>.routes.ts`, etc.), then wire the new route into `api.ts`. Types propagate to the frontend automatically through `AppType`.
 
 ## Quick Start
 
@@ -156,20 +169,15 @@ Both read from `branch-rules.json` — single source of truth.
 
 ## AI Agents
 
-Ten specialized Claude agents are defined in `.claude/agents/`, mapping directly to the FCIS architecture:
+Three lead agents in `.claude/agents/` dispatch scoped specialists via the `/do` skill (config in `.claude/skills/do/DO.yaml`):
 
-| Agent | Role |
-|-------|------|
-| `architect-lead` | Top-level orchestrator — delegates cross-cutting features and PR reviews to team leads |
-| `backend-lead` | Routes backend work to the correct architectural layer |
-| `backend-core` | Pure business logic in `core/` — no I/O, no side effects |
-| `backend-infra` | Effect services in `infra/` — one file per external system |
-| `backend-shell` | Hono routes + Effect.gen coordinators in `shell/` |
-| `frontend-lead` | Routes frontend work, enforces Hono RPC and Biome compliance |
-| `frontend-worker` | Astro pages, layouts, and typed API client in `apps/frontend/src/` |
-| `platform-lead` | Routes platform work to deploy or tooling agents |
-| `platform-deploy` | Cloudflare deployment config, wrangler, CI/CD workflows |
-| `platform-tooling` | Biome, Lefthook, Turborepo, TypeScript configs, branch protection |
+| Lead | Specialists (spawned per task) |
+|------|-------------------------------|
+| `backend-lead` | `feature-coder` (scope `features/`), `platform-coder` (scope `platform/`), `composition-coder` (api.ts + main.ts), `reviewer` (read-only) |
+| `frontend-lead` | `coder` (scope `apps/frontend/src/`), `reviewer` (read-only) |
+| `platform-lead` | `coder` (scope `.github/workflows/`), `reviewer` (read-only `.github/`) |
+
+Specialists are spawned by their lead via `claude -p` with hook-restricted scopes (`coder` profiles get scoped `Write`/`Edit`, `reviewer` profiles are read-only). The lead never edits files itself.
 
 ### Skills
 

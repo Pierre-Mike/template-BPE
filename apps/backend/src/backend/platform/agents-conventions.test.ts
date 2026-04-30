@@ -6,8 +6,8 @@ import { describe, expect, it } from "bun:test";
 import { agentsDoc as content } from "./agents-conventions.ts";
 
 describe("AGENTS.md — route conventions", () => {
-	it("documents route file location convention (shell/routes/<name>.ts)", () => {
-		expect(content).toContain("shell/routes/");
+	it("documents feature-slice route file location (features/<name>/<name>.routes.ts)", () => {
+		expect(content).toContain("features/<name>/<name>.routes.ts");
 	});
 
 	it("documents RouteModule export shape ({ app, testApp })", () => {
@@ -27,8 +27,9 @@ describe("AGENTS.md — route conventions", () => {
 		expect(content).toContain("testApp");
 	});
 
-	it("documents effect-handler.ts boundary rule (no imports from core/ or infra/)", () => {
+	it("documents effect-handler.ts boundary rule (no imports from features/)", () => {
 		expect(content).toContain("effect-handler.ts");
+		expect(content).toContain("effect-handler-stays-pure-glue");
 	});
 });
 
